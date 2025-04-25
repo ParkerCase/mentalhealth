@@ -4,15 +4,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { FaComment, FaTimes, FaPaperPlane } from 'react-icons/fa'
 import { createClient } from '@/lib/supabase/client'
+import { ChatMessage } from '@/lib/types'
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'assistant', content: 'Hello! I\'m here to help you connect with groups in your area. How can I assist you today?' }
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function ChatbotWidget() {
     if (!input.trim()) return
 
     // Add user message
-    const userMessage = { role: 'user', content: input }
+    const userMessage: ChatMessage = { role: 'user', content: input }
     setMessages([...messages, userMessage])
     setInput('')
     setIsLoading(true)
@@ -55,7 +56,7 @@ export default function ChatbotWidget() {
       
       const data = await response.json();
       
-      const botResponse = { 
+      const botResponse: ChatMessage = { 
         role: 'assistant', 
         content: data.response 
       };

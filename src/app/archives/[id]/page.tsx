@@ -7,20 +7,21 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { format } from 'date-fns'
+import { Article } from '@/lib/types'
 
 export default function ArticlePage() {
   const params = useParams()
-  const [article, setArticle] = useState(null)
-  const [relatedArticles, setRelatedArticles] = useState([])
+  const [article, setArticle] = useState<Article | null>(null)
+  const [relatedArticles, setRelatedArticles] = useState<Article[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
     if (!params.id) return
-    fetchArticle(params.id)
+    fetchArticle(params.id as string)
   }, [params.id])
 
-  const fetchArticle = async (id) => {
+  const fetchArticle = async (id: string) => {
     setIsLoading(true)
     try {
       const { data, error } = await supabase
@@ -36,7 +37,7 @@ export default function ArticlePage() {
           thumbnail_url,
           created_at,
           updated_at,
-          profiles(username, avatar_url)
+          profiles:profiles(username, avatar_url)
         `)
         .eq('id', id)
         .eq('published', true)
@@ -47,25 +48,52 @@ export default function ArticlePage() {
         return notFound()
       }
 
-      setArticle(data)
+      // Process data to match our Article type
+      const processedArticle: Article = {
+        ...data,
+        // Convert profiles to the correct format
+        profiles: data.profiles ? {
+          username: data.profiles && typeof data.profiles === 'object' && 'username' in data.profiles 
+            ? String(data.profiles.username) 
+            : Array.isArray(data.profiles) && data.profiles.length > 0 && typeof data.profiles[0] === 'object' && 'username' in data.profiles[0]
+              ? String(data.profiles[0].username)
+              : undefined,
+          avatar_url: data.profiles && typeof data.profiles === 'object' && 'avatar_url' in data.profiles 
+            ? String(data.profiles.avatar_url) 
+            : Array.isArray(data.profiles) && data.profiles.length > 0 && typeof data.profiles[0] === 'object' && 'avatar_url' in data.profiles[0]
+              ? String(data.profiles[0].avatar_url)
+              : undefined
+        } : undefined
+      }
+
+      setArticle(processedArticle)
 
       // Fetch related articles with the same category
       if (data.category) {
-        const { data: related } = await supabase
+        const { data: relatedData } = await supabase
           .from('archives')
           .select(`
             id, 
             title,
             thumbnail_url,
             created_at,
-            category
+            category,
+            content,
+            published,
+            updated_at
           `)
           .eq('category', data.category)
           .eq('published', true)
           .neq('id', id)
           .limit(3)
 
-        setRelatedArticles(related || [])
+        // Process related articles
+        const processedRelated = relatedData?.map(item => ({
+          ...item,
+          profiles: undefined // No profiles needed for the related articles preview
+        })) as Article[]
+
+        setRelatedArticles(processedRelated || [])
       }
     } catch (error) {
       console.error('Error fetching article:', error)

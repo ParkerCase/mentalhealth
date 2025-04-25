@@ -1,16 +1,25 @@
 // src/app/groups/register/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, ChangeEvent, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { GroupFormData, Group } from '@/lib/types'
+
+interface ExtendedGroupFormData extends GroupFormData {
+  leaderFirstName: string;
+  leaderLastName: string;
+  leaderEmail: string;
+  leaderPhone: string;
+  agreeToTerms: boolean;
+}
 
 export default function RegisterGroup() {
   const router = useRouter()
   const { user, profile, loading } = useAuthStore()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ExtendedGroupFormData>({
     name: '',
     description: '',
     address: '',
@@ -31,15 +40,17 @@ export default function RegisterGroup() {
   const [success, setSuccess] = useState('')
   const supabase = createClient()
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     })
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError('')
@@ -68,12 +79,12 @@ export default function RegisterGroup() {
           approved: false // Requires admin approval
         })
         .select()
-        .single()
+        .single() as { data: Group | null; error: Error | null }
 
       if (groupError) throw groupError
 
       // If the user is logged in, add them as a leader
-      if (user) {
+      if (user && group) {
         const { error: leaderError } = await supabase
           .from('group_leaders')
           .insert({
@@ -81,7 +92,7 @@ export default function RegisterGroup() {
             user_id: user.id,
             role: 'founder'
           })
-
+        
         if (leaderError) throw leaderError
       }
 
@@ -106,7 +117,7 @@ export default function RegisterGroup() {
         leaderEmail: '',
         leaderPhone: '',
         agreeToTerms: false
-      })
+      } as ExtendedGroupFormData)
     } catch (error) {
       console.error('Error registering group:', error)
       setError('There was an error submitting your group. Please try again.')

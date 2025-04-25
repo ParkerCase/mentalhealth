@@ -1,24 +1,32 @@
 // src/app/profile/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { FaUser, FaCamera, FaSignOutAlt, FaEdit } from 'react-icons/fa'
+import { Profile } from '@/lib/types'
+
+interface ProfileFormData {
+  username: string;
+  full_name: string;
+  bio: string;
+  location: string;
+}
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user, profile, loading, initialize, signOut } = useAuthStore()
   const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProfileFormData>({
     username: '',
     full_name: '',
     bio: '',
     location: '',
   })
-  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -52,7 +60,7 @@ export default function ProfilePage() {
     }
   }, [user, profile, loading, router])
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData({
       ...formData,
@@ -60,27 +68,34 @@ export default function ProfilePage() {
     })
   }
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    
+    const file = files[0]
     
     // Preview the image
     const reader = new FileReader()
     reader.onloadend = () => {
-      setAvatarPreview(reader.result)
+      const result = reader.result
+      if (typeof result === 'string') {
+        setAvatarPreview(result)
+      }
     }
     reader.readAsDataURL(file)
     
     setAvatarFile(file)
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError('')
     setSuccess('')
     
     try {
+      if (!user) throw new Error('User not authenticated')
+      
       // Update avatar if changed
       let avatar_url = profile?.avatar_url || null
       
@@ -121,9 +136,9 @@ export default function ProfilePage() {
       
       // Refresh auth store profile data
       initialize()
-    } catch (error) {
-      console.error('Error updating profile:', error)
-      setError(error.message || 'There was an error updating your profile')
+    } catch (err) {
+      console.error('Error updating profile:', err)
+      setError(err instanceof Error ? err.message : 'There was an error updating your profile')
     } finally {
       setIsSubmitting(false)
     }

@@ -6,11 +6,12 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { format } from 'date-fns'
+import { Article } from '@/lib/types'
 
 export default function Archives() {
-  const [articles, setArticles] = useState([])
-  const [featuredArticle, setFeaturedArticle] = useState(null)
-  const [categories, setCategories] = useState([])
+  const [articles, setArticles] = useState<Article[]>([])
+  const [featuredArticle, setFeaturedArticle] = useState<Article | null>(null)
+  const [categories, setCategories] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
@@ -36,7 +37,7 @@ export default function Archives() {
           thumbnail_url,
           created_at,
           updated_at,
-          profiles(username, avatar_url)
+          profiles:profiles(username, avatar_url)
         `)
         .eq('published', true)
         .order('created_at', { ascending: false })
@@ -49,16 +50,31 @@ export default function Archives() {
 
       if (error) throw error
 
+      // Process data to match our Article type
+      const processedData = data?.map(item => ({
+        ...item,
+        // Convert profiles array to single object if needed
+        profiles: item.profiles && Array.isArray(item.profiles) && item.profiles.length > 0
+          ? {
+              username: item.profiles[0]?.username,
+              avatar_url: item.profiles[0]?.avatar_url
+            }
+          : item.profiles
+      })) as Article[]
+
       // Find featured article and remaining articles
-      const featured = data.find(article => article.featured)
-      const regular = data.filter(article => !article.featured)
+      const featured = processedData?.find(article => article.featured)
+      const regular = processedData?.filter(article => !article.featured)
 
       setFeaturedArticle(featured || null)
       setArticles(regular || [])
 
       // Extract unique categories
-      const uniqueCategories = [...new Set(data.map(article => article.category))]
-      setCategories(uniqueCategories.filter(Boolean))
+      const categoriesSet = new Set<string>()
+      processedData?.forEach(article => {
+        if (article.category) categoriesSet.add(article.category)
+      })
+      setCategories(Array.from(categoriesSet))
     } catch (error) {
       console.error('Error fetching articles:', error)
     } finally {
@@ -66,14 +82,15 @@ export default function Archives() {
     }
   }
 
-  const handleCategoryChange = (category) => {
+  const handleCategoryChange = (category: string) => {
     setSelectedCategory(category === selectedCategory ? '' : category)
   }
 
   // Helper function to truncate text
-  const truncateText = (text, maxLength) => {
-    if (text.length <= maxLength) return text
-    return text.substring(0, maxLength) + '...'
+  const truncateText = (text: string, maxLength: number): string => {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 
   return (

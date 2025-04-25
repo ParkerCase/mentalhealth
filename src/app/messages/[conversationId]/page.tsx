@@ -9,17 +9,18 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { format } from 'date-fns'
 import { FaArrowLeft, FaPaperPlane, FaUser } from 'react-icons/fa'
+import { Group, MessageWithProfile } from '@/lib/types'
 
 export default function ConversationPage() {
   const params = useParams()
   const router = useRouter()
   const { user, profile, loading, initialize } = useAuthStore()
-  const [messages, setMessages] = useState([])
-  const [group, setGroup] = useState(null)
+  const [messages, setMessages] = useState<MessageWithProfile[]>([])
+  const [group, setGroup] = useState<Group | null>(null)
   const [newMessage, setNewMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
-  const messagesEndRef = useRef(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
   
   useEffect(() => {
@@ -37,23 +38,30 @@ export default function ConversationPage() {
     if (!params.conversationId) return
     
     fetchConversation()
-    fetchMessages()
     
     // Setup real-time subscription for new messages
-    const messagesSubscription = supabase
-      .channel('messages')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `group_id=eq.${group?.id}`
-      }, () => {
-        fetchMessages()
-      })
-      .subscribe()
+    let messagesSubscription: any = null;
+    
+    if (group?.id) {
+      fetchMessages()
+      
+      messagesSubscription = supabase
+        .channel('messages')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `group_id=eq.${group.id}`
+        }, () => {
+          fetchMessages()
+        })
+        .subscribe()
+    }
     
     return () => {
-      supabase.removeChannel(messagesSubscription)
+      if (messagesSubscription) {
+        supabase.removeChannel(messagesSubscription)
+      }
     }
   }, [user, loading, params.conversationId, router, group?.id])
   
@@ -76,6 +84,8 @@ export default function ConversationPage() {
   }, [messages, user])
 
   const fetchConversation = async () => {
+    if (!user || !params.conversationId) return
+    
     try {
       const { data, error } = await supabase
         .from('conversations')
@@ -94,7 +104,33 @@ export default function ConversationPage() {
       
       if (error) throw error
       
-      setGroup(data.groups)
+      // Create a properly typed Group object from the data
+      let group: Group | null = null;
+      
+      if (data.groups) {
+        // Need to use type assertions because TypeScript cannot infer the type properly
+        const groupData = data.groups as any;
+        group = {
+          id: groupData.id ? String(groupData.id) : '',
+          name: groupData.name ? String(groupData.name) : '',
+          description: groupData.description ? String(groupData.description) : null,
+          location: null,
+          geo_location: null,
+          address: null,
+          city: null,
+          state: null,
+          zip: null,
+          website: null,
+          email: null,
+          phone: null,
+          logo_url: groupData.logo_url ? String(groupData.logo_url) : null,
+          approved: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      }
+      
+      setGroup(group)
     } catch (error) {
       console.error('Error fetching conversation:', error)
       router.push('/messages')
@@ -102,6 +138,8 @@ export default function ConversationPage() {
   }
 
   const fetchMessages = async () => {
+    if (!user || !group?.id) return
+    
     setIsLoading(true)
     try {
       const { data, error } = await supabase
@@ -117,13 +155,41 @@ export default function ConversationPage() {
             avatar_url
           )
         `)
-        .eq('group_id', group?.id)
+        .eq('group_id', group.id)
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .order('created_at', { ascending: true })
       
       if (error) throw error
       
-      setMessages(data || [])
+      // Process the data to match our MessageWithProfile type
+      const typedMessages: MessageWithProfile[] = (data || []).map(msg => {
+        // Convert profiles data to the correct type
+        let profiles;
+        if (msg.profiles) {
+          const profileData = msg.profiles as any;
+          profiles = {
+            username: profileData && typeof profileData === 'object' && 'username' in profileData 
+              ? String(profileData.username) 
+              : undefined,
+            avatar_url: profileData && typeof profileData === 'object' && 'avatar_url' in profileData 
+              ? String(profileData.avatar_url) 
+              : undefined
+          };
+        }
+        
+        return {
+          id: String(msg.id),
+          content: String(msg.content),
+          created_at: String(msg.created_at),
+          sender_id: String(msg.sender_id),
+          read: Boolean(msg.read),
+          recipient_id: null, // Set default value for recipient_id
+          group_id: group?.id || null, // Use the current group id
+          profiles
+        };
+      });
+      
+      setMessages(typedMessages)
     } catch (error) {
       console.error('Error fetching messages:', error)
     } finally {
@@ -131,7 +197,7 @@ export default function ConversationPage() {
     }
   }
 
-  const markMessagesAsRead = async (messageIds) => {
+  const markMessagesAsRead = async (messageIds: string[]) => {
     try {
       const { error } = await supabase
         .from('messages')
@@ -151,10 +217,10 @@ export default function ConversationPage() {
     }
   }
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!newMessage.trim() || isSending) return
+    if (!newMessage.trim() || isSending || !user || !group) return
     
     setIsSending(true)
     
@@ -188,7 +254,7 @@ export default function ConversationPage() {
       setNewMessage('')
       
       // Optimistically add message to the list
-      const optimisticMessage = {
+      const optimisticMessage: MessageWithProfile = {
         ...message,
         profiles: {
           username: profile?.username || 'You',
@@ -204,7 +270,7 @@ export default function ConversationPage() {
     }
   }
 
-  const formatMessageDate = (dateString) => {
+  const formatMessageDate = (dateString: string) => {
     const messageDate = new Date(dateString)
     const today = new Date()
     
@@ -281,7 +347,7 @@ export default function ConversationPage() {
         ) : messages.length > 0 ? (
           <div className="space-y-4">
             {messages.map((message, index) => {
-              const isCurrentUser = message.sender_id === user.id
+              const isCurrentUser = user && message.sender_id === user.id
               const showDate = index === 0 || 
                 new Date(message.created_at).toDateString() !== 
                 new Date(messages[index - 1].created_at).toDateString()

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { GroupFormData } from '@/lib/types'
 
 interface GroupFormProps {
   onSuccess?: () => void
@@ -11,7 +12,7 @@ interface GroupFormProps {
 export default function GroupForm({ onSuccess }: GroupFormProps) {
   const router = useRouter()
   const supabase = createClient()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<GroupFormData>({
     name: '',
     description: '',
     location: '',
@@ -116,7 +117,7 @@ export default function GroupForm({ onSuccess }: GroupFormProps) {
                     website: '',
                     email: '',
                     phone: '',
-                  })
+                  } as GroupFormData)
                 }}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
               >

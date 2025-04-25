@@ -1,10 +1,41 @@
 // src/app/page.tsx
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/stores/authStore'
-import Globe from '@/components/map/Globe'
+import dynamic from 'next/dynamic'
+
+// Dynamically import the Globe component with no SSR
+const Globe = dynamic(() => import('@/components/map/Globe'), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
+      <div className="text-gray-500">Loading interactive globe...</div>
+    </div>
+  )
+})
+
+// Error boundary component
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false);
+  
+  useEffect(() => {
+    const handleError = () => setHasError(true);
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+  
+  if (hasError) {
+    return (
+      <div className="h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
+        <div className="text-gray-500">Unable to load globe visualization.</div>
+      </div>
+    );
+  }
+  
+  return <>{children}</>;
+}
 
 export default function Home() {
   const { initialize } = useAuthStore()
@@ -39,7 +70,15 @@ export default function Home() {
         </div>
         
         <div className="md:w-1/2 h-96">
-          <Globe />
+          <ErrorBoundary>
+            <Suspense fallback={
+              <div className="h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
+                <div className="text-gray-500">Loading interactive globe...</div>
+              </div>
+            }>
+              <Globe />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </div>
       

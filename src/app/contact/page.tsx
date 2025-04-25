@@ -1,13 +1,14 @@
 // src/app/contact/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, ChangeEvent, FormEvent } from 'react'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { createClient } from '@/lib/supabase/client'
+import { ContactFormData } from '@/lib/types'
 
 export default function ContactPage() {
   const { user, profile } = useAuthStore()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContactFormData>({
     name: profile?.full_name || '',
     email: user?.email || '',
     subject: '',
@@ -18,7 +19,7 @@ export default function ContactPage() {
   const [success, setSuccess] = useState(false)
   const supabase = createClient()
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData({
       ...formData,
@@ -26,7 +27,7 @@ export default function ContactPage() {
     })
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError('')
@@ -59,9 +60,9 @@ export default function ContactPage() {
         message: ''
       })
       setSuccess(true)
-    } catch (error) {
-      console.error('Error submitting contact form:', error)
-      setError(error.message || 'There was an error submitting your message. Please try again.')
+    } catch (err) {
+      console.error('Error submitting contact form:', err)
+      setError(err instanceof Error ? err.message : 'There was an error submitting your message. Please try again.')
     } finally {
       setIsSubmitting(false)
     }

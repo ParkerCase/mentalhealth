@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { FaCheck, FaTimes, FaSearch, FaFilter } from 'react-icons/fa'
+import { Group } from '@/lib/types'
 
 export default function AdminGroups() {
-  const [groups, setGroups] = useState([])
-  const [filteredGroups, setFilteredGroups] = useState([])
+  const [groups, setGroups] = useState<Group[]>([])
+  const [filteredGroups, setFilteredGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all') // 'all', 'approved', 'pending'
@@ -62,7 +63,7 @@ export default function AdminGroups() {
     setFilteredGroups(filtered)
   }, [groups, searchTerm, statusFilter])
   
-  const handleApprove = async (groupId) => {
+  const handleApprove = async (groupId: string) => {
     try {
       const { error } = await supabase
         .from('groups')
@@ -82,7 +83,7 @@ export default function AdminGroups() {
     }
   }
   
-  const handleReject = async (groupId) => {
+  const handleReject = async (groupId: string) => {
     if (!confirm('Are you sure you want to reject this group?')) return
     
     try {

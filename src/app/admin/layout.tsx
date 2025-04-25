@@ -20,7 +20,7 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const { user, profile, loading, initialize } = useAuthStore()
+  const { user, loading, initialize } = useAuthStore()
   
   useEffect(() => {
     initialize()

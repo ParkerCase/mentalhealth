@@ -63,7 +63,7 @@ export default function RegisterPage() {
           <h1 className="text-4xl font-bold mb-6">Join Our Community</h1>
           <p className="text-xl mb-8 text-center">Create an account to connect with support groups and find resources tailored to your needs.</p>
           <div className="bg-white/20 p-6 rounded-lg backdrop-blur-md max-w-md">
-            <p className="text-lg">"The connections I've made through this platform have provided me with invaluable support during difficult times."</p>
+            <p className="text-lg">&quot;The connections I&apos;ve made through this platform have provided me with invaluable support during difficult times.&quot;</p>
             <p className="mt-4 font-semibold">— Michael R., Community Member</p>
           </div>
         </div>

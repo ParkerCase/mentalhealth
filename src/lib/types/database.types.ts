@@ -48,7 +48,7 @@ export interface Database {
           name: string
           description: string | null
           location: string | null
-          geo_location: unknown | null
+          geo_location: { type: string; coordinates: [number, number] } | null
           address: string | null
           city: string | null
           state: string | null
@@ -66,7 +66,7 @@ export interface Database {
           name: string
           description?: string | null
           location?: string | null
-          geo_location?: unknown | null
+          geo_location?: { type: string; coordinates: [number, number] } | null
           address?: string | null
           city?: string | null
           state?: string | null
@@ -84,7 +84,7 @@ export interface Database {
           name?: string
           description?: string | null
           location?: string | null
-          geo_location?: unknown | null
+          geo_location?: { type: string; coordinates: [number, number] } | null
           address?: string | null
           city?: string | null
           state?: string | null

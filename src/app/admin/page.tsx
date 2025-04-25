@@ -4,16 +4,26 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { FaUsers, FaUserFriends, FaComments, FaClipboardList } from 'react-icons/fa'
+import Link from 'next/link'
+import { Group } from '@/lib/types'
+
+interface AdminStats {
+  totalGroups: number;
+  pendingGroups: number;
+  totalUsers: number;
+  totalMessages: number;
+  totalContacts: number;
+}
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<AdminStats>({
     totalGroups: 0,
     pendingGroups: 0,
     totalUsers: 0,
     totalMessages: 0,
     totalContacts: 0
   })
-  const [recentGroups, setRecentGroups] = useState([])
+  const [recentGroups, setRecentGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
   
@@ -70,7 +80,7 @@ export default function AdminDashboard() {
     }
     
     fetchStats()
-  }, [])
+  }, [supabase])
   
   if (loading) {
     return (
@@ -157,7 +167,7 @@ export default function AdminDashboard() {
                       <div className="text-sm font-medium text-gray-900">{group.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{`${group.city}, ${group.state}`}</div>
+                      <div className="text-sm text-gray-500">{`${group.city || ''}, ${group.state || ''}`}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
@@ -174,7 +184,7 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                      <a href={`/admin/groups/${group.id}`}>View Details</a>
+                      <Link href={`/admin/groups/${group.id}`}>View Details</Link>
                     </td>
                   </tr>
                 ))}
@@ -190,24 +200,24 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a 
+          <Link 
             href="/admin/groups?filter=pending" 
             className="bg-blue-50 hover:bg-blue-100 text-blue-800 font-medium py-3 px-4 rounded-md flex items-center justify-center"
           >
             Review Pending Groups
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/admin/content/create" 
             className="bg-green-50 hover:bg-green-100 text-green-800 font-medium py-3 px-4 rounded-md flex items-center justify-center"
           >
             Create New Content
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/admin/messages" 
             className="bg-purple-50 hover:bg-purple-100 text-purple-800 font-medium py-3 px-4 rounded-md flex items-center justify-center"
           >
             View Support Messages
-          </a>
+          </Link>
         </div>
       </div>
     </div>

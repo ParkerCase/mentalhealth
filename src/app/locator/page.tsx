@@ -1,23 +1,55 @@
 // src/app/locator/page.tsx
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { FaSearch, FaMapMarkerAlt, FaUserCircle, FaInfo } from 'react-icons/fa'
-import LocationMap from '@/components/map/LocationMap'
+import dynamic from 'next/dynamic'
+import { Group, GroupSearchParams } from '@/lib/types'
+
+// Dynamically import LocationMap component with no SSR
+const LocationMap = dynamic(() => import('@/components/map/LocationMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-md">
+      <div className="text-gray-500">Loading map...</div>
+    </div>
+  )
+})
+
+// Error boundary component
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false);
+  
+  useEffect(() => {
+    const handleError = () => setHasError(true);
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+  
+  if (hasError) {
+    return (
+      <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-md">
+        <div className="text-gray-500">Unable to load map.</div>
+      </div>
+    );
+  }
+  
+  return <>{children}</>;
+}
 
 export default function Locator() {
   const router = useRouter()
   const { user, loading, initialize } = useAuthStore()
-  const [searchParams, setSearchParams] = useState({
+  const [searchParams, setSearchParams] = useState<GroupSearchParams>({
     city: '',
     state: '',
     keywords: ''
   })
-  const [groups, setGroups] = useState([])
+  const [groups, setGroups] = useState<Group[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [searchPerformed, setSearchPerformed] = useState(false)
   const [requiresLogin, setRequiresLogin] = useState(false)
@@ -28,7 +60,7 @@ export default function Locator() {
     initialize()
   }, [initialize])
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setSearchParams({
       ...searchParams,
@@ -36,7 +68,7 @@ export default function Locator() {
     })
   }
   
-  const handleSearch = async (e) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Check if user is logged in
@@ -79,14 +111,14 @@ export default function Locator() {
     }
   }
   
-  const sendMessage = async (groupId) => {
+  const sendMessage = async (groupId: string) => {
     if (!user) {
       setRequiresLogin(true)
       return
     }
     
     // Check if a conversation already exists
-    const { data: existingConversation } = await supabase
+    const { data: existingConversation, error: queryError } = await supabase
       .from('conversations')
       .select('id')
       .eq('user_id', user.id)
@@ -216,7 +248,15 @@ export default function Locator() {
             groups.length > 0 ? (
               <div className="space-y-6">
                 <div className="bg-white p-4 rounded-md shadow">
-                  <LocationMap groups={groups} />
+                  <Suspense fallback={
+                    <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-md">
+                      <div className="text-gray-500">Loading map...</div>
+                    </div>
+                  }>
+                    <ErrorBoundary>
+                      <LocationMap groups={groups} />
+                    </ErrorBoundary>
+                  </Suspense>
                 </div>
                 
                 <h2 className="text-xl font-semibold">Found {groups.length} groups</h2>
@@ -232,7 +272,7 @@ export default function Locator() {
                             {[group.city, group.state].filter(Boolean).join(', ')}
                           </p>
                           <p className="text-gray-700 mb-4">
-                            {group.description?.length > 150
+                            {group.description?.length && group.description.length > 150
                               ? `${group.description.substring(0, 150)}...`
                               : group.description}
                           </p>

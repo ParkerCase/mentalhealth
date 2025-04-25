@@ -2,13 +2,14 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse, NextRequest } from 'next/server'
 import { Database } from '@/lib/types/database.types'
+import { GroupFormData, Group } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   try {
-    const groupData = await req.json()
+    const groupData = await req.json() as GroupFormData
     
     // Validate required fields
-    const requiredFields = ['name', 'description', 'location', 'city', 'state', 'zip', 'email']
+    const requiredFields = ['name', 'description', 'city', 'state', 'zip', 'email'] as Array<keyof GroupFormData>
     for (const field of requiredFields) {
       if (!groupData[field]) {
         return NextResponse.json({ error: `${field} is required` }, { status: 400 })
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
       .insert({
         name: groupData.name,
         description: groupData.description,
-        location: groupData.location,
+        location: groupData.location || null,
         address: groupData.address || null,
         city: groupData.city,
         state: groupData.state,
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
         phone: groupData.phone || null,
         approved: false, // Groups require approval before being public
       })
-      .select()
+      .select() as { data: Group[] | null; error: Error | null }
 
     if (error) {
       console.error('Group registration error:', error)
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Return the newly created group
-    return NextResponse.json({ success: true, group: data[0] })
+    return NextResponse.json({ success: true, group: data?.[0] || null })
   } catch (error) {
     console.error('Group registration API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

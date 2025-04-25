@@ -7,11 +7,12 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FaCheck, FaTimes, FaEdit, FaArrowLeft, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe } from 'react-icons/fa'
+import { GroupWithLeaders } from '@/lib/types'
 
 export default function AdminGroupDetail() {
   const params = useParams()
   const router = useRouter()
-  const [group, setGroup] = useState(null)
+  const [group, setGroup] = useState<GroupWithLeaders | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const supabase = createClient()
@@ -52,9 +53,11 @@ export default function AdminGroupDetail() {
     }
     
     fetchGroup()
-  }, [params.id])
+  }, [params.id, supabase])
   
   const handleApprove = async () => {
+    if (!params.id) return
+    
     try {
       const { error } = await supabase
         .from('groups')
@@ -64,13 +67,14 @@ export default function AdminGroupDetail() {
       if (error) throw error
       
       // Update local state
-      setGroup(prev => ({ ...prev, approved: true }))
+      setGroup(prev => prev ? { ...prev, approved: true } : null)
     } catch (error) {
       console.error('Error approving group:', error)
     }
   }
   
   const handleReject = async () => {
+    if (!params.id) return
     if (!confirm('Are you sure you want to reject this group? This action cannot be undone.')) return
     
     try {
@@ -251,7 +255,7 @@ export default function AdminGroupDetail() {
                           ) : (
                             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                               <span className="text-gray-500">
-                                {leader.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                                {leader.profiles?.username?.charAt(0)?.toUpperCase() || 'U'}
                               </span>
                             </div>
                           )}

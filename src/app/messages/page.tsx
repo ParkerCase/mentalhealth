@@ -9,11 +9,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { format } from 'date-fns'
 import { FaEnvelope, FaEnvelopeOpen, FaUser } from 'react-icons/fa'
+import { Conversation, MessageWithProfile, Group } from '@/lib/types'
+
+interface ConversationWithMessagesAndGroup extends Conversation {
+  groups?: Group;
+  messages: MessageWithProfile[];
+  latestMessage?: MessageWithProfile | null;
+  unreadCount: number;
+}
 
 export default function MessagesPage() {
   const router = useRouter()
   const { user, profile, loading, initialize } = useAuthStore()
-  const [conversations, setConversations] = useState([])
+  const [conversations, setConversations] = useState<ConversationWithMessagesAndGroup[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
@@ -47,9 +55,11 @@ export default function MessagesPage() {
     return () => {
       supabase.removeChannel(conversationsSubscription)
     }
-  }, [user, loading, router])
+  }, [user, loading, router, supabase])
 
   const fetchConversations = async () => {
+    if (!user) return;
+    
     setIsLoading(true)
     try {
       // Fetch conversations with the most recent message and group info
@@ -81,7 +91,7 @@ export default function MessagesPage() {
       const processedConversations = data.map(conversation => {
         // Sort messages by creation date (newest first)
         const sortedMessages = conversation.messages.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
         
         return {
@@ -93,7 +103,71 @@ export default function MessagesPage() {
         }
       })
       
-      setConversations(processedConversations)
+      // Process to ensure it matches our type definition exactly
+      const typedConversations: ConversationWithMessagesAndGroup[] = processedConversations.map(conv => {
+        const typedMessages: MessageWithProfile[] = conv.messages.map(msg => ({
+          id: String(msg.id),
+          content: String(msg.content),
+          created_at: String(msg.created_at),
+          sender_id: String(msg.sender_id),
+          read: Boolean(msg.read),
+          recipient_id: null, // Default value
+          group_id: typeof conv.groups === 'object' && 'id' in (conv.groups as any) 
+            ? String((conv.groups as any).id) 
+            : null,
+        }));
+
+        const typedLatestMessage = conv.latestMessage ? {
+          id: String(conv.latestMessage.id),
+          content: String(conv.latestMessage.content),
+          created_at: String(conv.latestMessage.created_at),
+          sender_id: String(conv.latestMessage.sender_id),
+          read: Boolean(conv.latestMessage.read),
+          recipient_id: null, // Default value
+          group_id: typeof conv.groups === 'object' && 'id' in (conv.groups as any) 
+            ? String((conv.groups as any).id) 
+            : null,
+        } as MessageWithProfile : null;
+
+        return {
+          id: String(conv.id),
+          user_id: user.id, 
+          group_id: typeof conv.groups === 'object' && 'id' in (conv.groups as any) ? String((conv.groups as any).id) : '',
+          created_at: conv.created_at,
+          updated_at: conv.updated_at || undefined,
+          last_message_id: typedLatestMessage?.id || undefined,
+          // Convert groups data to a properly typed Group object
+          groups: conv.groups ? {
+            id: typeof conv.groups === 'object' && 'id' in (conv.groups as any) 
+              ? String((conv.groups as any).id) 
+              : '',
+            name: typeof conv.groups === 'object' && 'name' in (conv.groups as any) 
+              ? String((conv.groups as any).name) 
+              : '',
+            description: null,
+            location: null,
+            geo_location: null,
+            address: null,
+            city: null,
+            state: null,
+            zip: null,
+            website: null,
+            email: null,
+            phone: null,
+            logo_url: typeof conv.groups === 'object' && 'logo_url' in (conv.groups as any) 
+              ? String((conv.groups as any).logo_url) 
+              : null,
+            approved: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } : undefined,
+          messages: typedMessages,
+          latestMessage: typedLatestMessage,
+          unreadCount: conv.unreadCount
+        };
+      });
+      
+      setConversations(typedConversations)
     } catch (error) {
       console.error('Error fetching conversations:', error)
     } finally {
@@ -163,7 +237,7 @@ export default function MessagesPage() {
                     
                     {conversation.latestMessage ? (
                       <p className="text-sm text-gray-600 truncate mt-1">
-                        {conversation.latestMessage.sender_id === user.id ? (
+                        {user && conversation.latestMessage.sender_id === user.id ? (
                           <span className="text-gray-400">You: </span>
                         ) : null}
                         {conversation.latestMessage.content}
