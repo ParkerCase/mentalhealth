@@ -3,6 +3,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+
   images: {
     domains: [
       "pbzjrfcoipldrkpytikw.supabase.co", // Replace with your Supabase project domain
@@ -14,6 +15,16 @@ const nextConfig = {
   },
   experimental: {
     serverActions: true,
+  },
+  webpack: (config, { isServer }) => {
+    // Add resolver for Three.js WebGPU issue
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "three/webgpu": false,
+      "three/addons/": "three/examples/jsm/",
+    };
+
+    return config;
   },
 };
 

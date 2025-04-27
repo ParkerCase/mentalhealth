@@ -6,7 +6,7 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import dynamic from 'next/dynamic'
 
 // Dynamically import the Globe component with no SSR
-const Globe = dynamic(() => import('@/components/map/EnhancedGlobeContent'), { 
+const GlobeComponent = dynamic(() => import('@/components/globe/R3FGGlobeComponent'), { 
   ssr: false,
   loading: () => (
     <div className="h-screen w-full flex items-center justify-center">
@@ -65,7 +65,10 @@ export default function Home() {
                 </div>
               </div>
             }>
-              <Globe onRegionSelect={() => {}} />
+              <GlobeComponent 
+                groups={[]} 
+                height="100vh"
+              />
             </Suspense>
           </ErrorBoundary>
         </div>
