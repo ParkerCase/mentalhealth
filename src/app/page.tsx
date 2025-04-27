@@ -6,7 +6,7 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import dynamic from 'next/dynamic'
 
 // Dynamically import the Globe component with no SSR
-const GlobeComponent = dynamic(() => import('@/components/globe/R3FGGlobeComponent'), { 
+const GlobeComponent = dynamic(() => import('@/components/globe/index').then(mod => mod.GlobeComponent), { 
   ssr: false,
   loading: () => (
     <div className="h-screen w-full flex items-center justify-center">
@@ -56,7 +56,7 @@ export default function Home() {
       {/* Hero Section with full-height globe visualization */}
       <section className="relative h-screen flex items-center overflow-hidden">
         {/* Background globe visualization */}
-        <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0 w-full h-full z-0">
           <ErrorBoundary>
             <Suspense fallback={
               <div className="h-screen w-full flex items-center justify-center">
@@ -68,13 +68,14 @@ export default function Home() {
               <GlobeComponent 
                 groups={[]} 
                 height="100vh"
+                width="100%"
               />
             </Suspense>
           </ErrorBoundary>
         </div>
         
         {/* Gradient overlay for better text visibility */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent z-5"></div>
         
         {/* Content overlay */}
         <div className="container relative mx-auto px-6 z-10">
@@ -109,13 +110,13 @@ export default function Home() {
         </div>
         
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center z-10">
           <span className="text-xs uppercase tracking-widest text-gray-400 mb-2">Discover More</span>
           <div className="w-0.5 h-8 bg-gradient-to-b from-white to-transparent opacity-30"></div>
         </div>
         
         {/* Gradient transition to the next section */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#292929] to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#292929] to-transparent z-10"></div>
       </section>
       
       {/* How It Works Section */}

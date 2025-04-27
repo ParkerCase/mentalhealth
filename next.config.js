@@ -24,6 +24,19 @@ const nextConfig = {
       "three/addons/": "three/examples/jsm/",
     };
 
+    // Fix for BatchedMesh import error in three-mesh-bvh
+    config.module.rules.push({
+      test: /node_modules\/three-mesh-bvh\/src\/utils\/ExtensionUtilities\.js$/,
+      use: {
+        loader: "string-replace-loader",
+        options: {
+          search: "import { BatchedMesh } from 'three';",
+          replace: "// BatchedMesh import removed as it's not available",
+          flags: "g",
+        },
+      },
+    });
+
     return config;
   },
 };
