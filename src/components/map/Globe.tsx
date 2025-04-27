@@ -1,27 +1,39 @@
-'use client'
-import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
+'use client';
 
-// Dynamically import the Globe component with no SSR
-const DynamicGlobe = dynamic(() => import('./GlobeImpl'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[400px] flex items-center justify-center bg-gray-100 rounded-md">
-      <div className="text-gray-500">Loading 3D globe...</div>
-    </div>
-  )
-})
+import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 
-export default function GlobeComponent() {
-  return (
-    <div className="h-[400px]">
-      <Suspense fallback={
-        <div className="h-[400px] flex items-center justify-center bg-gray-100 rounded-md">
-          <div className="text-gray-500">Loading 3D globe...</div>
-        </div>
-      }>
-        <DynamicGlobe />
-      </Suspense>
+// A much simpler Globe component to avoid JSX transformation issues
+const Globe = () => {
+  const [mounted, setMounted] = useState(false);
+
+  // Only load Three.js components on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Create a simple loading element
+  const LoadingElement = () => (
+    <div className="h-full w-full flex items-center justify-center bg-[#292929]">
+      <div className="text-white opacity-50 animate-pulse">Loading visualization...</div>
     </div>
-  )
-}
+  );
+
+  // Don't try to render anything on server
+  if (!mounted) {
+    return <LoadingElement />;
+  }
+
+  // Dynamically import only on client side
+  const DynamicGlobeContent = dynamic(
+    () => import('./GlobeContent'),
+    {
+      ssr: false,
+      loading: () => <LoadingElement />
+    }
+  );
+
+  return <DynamicGlobeContent />;
+};
+
+export default Globe;

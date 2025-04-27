@@ -1,4 +1,3 @@
-// src/app/locator/page.tsx
 'use client'
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
@@ -6,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { FaSearch, FaMapMarkerAlt, FaUserCircle, FaInfo } from 'react-icons/fa'
+import { FaSearch, FaMapMarkerAlt, FaInfoCircle, FaSlack } from 'react-icons/fa'
 import dynamic from 'next/dynamic'
 import { Group, GroupSearchParams } from '@/lib/types'
 
@@ -14,8 +13,8 @@ import { Group, GroupSearchParams } from '@/lib/types'
 const LocationMap = dynamic(() => import('@/components/map/LocationMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-md">
-      <div className="text-gray-500">Loading map...</div>
+    <div className="w-full h-96 flex items-center justify-center bg-[#292929] rounded-sm border border-white/10">
+      <div className="text-gray-400 animate-pulse tracking-wider">Loading map...</div>
     </div>
   )
 })
@@ -32,8 +31,8 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
   
   if (hasError) {
     return (
-      <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-md">
-        <div className="text-gray-500">Unable to load map.</div>
+      <div className="w-full h-96 flex items-center justify-center bg-[#292929] rounded-sm border border-white/10">
+        <div className="text-gray-400">Unable to load map.</div>
       </div>
     );
   }
@@ -149,24 +148,22 @@ export default function Locator() {
   }
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Find Groups Near You</h1>
+    <div className="container mx-auto px-6 py-16">
+      <h1 className="text-4xl font-light tracking-wide mb-12"><span className="font-normal">Find</span> Groups</h1>
       
       {requiresLogin && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+        <div className="bg-[#4A3E33] border-l-2 border-[#FFD700] p-4 mb-8 rounded-sm">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
+              <FaInfoCircle className="text-[#FFD700] mt-1" />
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
+            <div className="ml-4">
+              <p className="text-sm text-white/80">
                 You need to be logged in to search for groups. {' '}
-                <Link href="/api/auth/login" className="font-medium underline text-yellow-700 hover:text-yellow-600">
+                <Link href="/api/auth/login" className="text-blue-400 hover:text-blue-300 underline">
                   Login
                 </Link> or {' '}
-                <Link href="/api/auth/register" className="font-medium underline text-yellow-700 hover:text-yellow-600">
+                <Link href="/api/auth/register" className="text-blue-400 hover:text-blue-300 underline">
                   Register
                 </Link> to continue.
               </p>
@@ -177,11 +174,11 @@ export default function Locator() {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1">
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Search Filters</h2>
+          <div className="card border border-white/5 backdrop-blur-sm">
+            <h2 className="text-xl font-light tracking-wide mb-6">Search Filters</h2>
             <form onSubmit={handleSearch}>
-              <div className="mb-4">
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="mb-6">
+                <label htmlFor="city" className="form-label">
                   City
                 </label>
                 <input
@@ -190,13 +187,13 @@ export default function Locator() {
                   name="city"
                   value={searchParams.city}
                   onChange={handleChange}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="form-input bg-[#3a3a3a]"
                   placeholder="Enter city name"
                 />
               </div>
               
-              <div className="mb-4">
-                <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="mb-6">
+                <label htmlFor="state" className="form-label">
                   State
                 </label>
                 <input
@@ -205,13 +202,13 @@ export default function Locator() {
                   name="state"
                   value={searchParams.state}
                   onChange={handleChange}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="form-input bg-[#3a3a3a]"
                   placeholder="Enter state"
                 />
               </div>
               
-              <div className="mb-6">
-                <label htmlFor="keywords" className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="mb-8">
+                <label htmlFor="keywords" className="form-label">
                   Keywords
                 </label>
                 <input
@@ -220,7 +217,7 @@ export default function Locator() {
                   name="keywords"
                   value={searchParams.keywords}
                   onChange={handleChange}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="form-input bg-[#3a3a3a]"
                   placeholder="Search by name or description"
                 />
               </div>
@@ -228,15 +225,21 @@ export default function Locator() {
               <button
                 type="submit"
                 disabled={isSearching || loading}
-                className="w-full flex justify-center items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+                className="btn-primary w-full"
               >
                 {isSearching ? (
-                  'Searching...'
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Searching...
+                  </span>
                 ) : (
-                  <>
+                  <span className="flex items-center justify-center">
                     <FaSearch className="mr-2" />
                     Search Groups
-                  </>
+                  </span>
                 )}
               </button>
             </form>
@@ -246,11 +249,11 @@ export default function Locator() {
         <div className="md:col-span-2">
           {searchPerformed ? (
             groups.length > 0 ? (
-              <div className="space-y-6">
-                <div className="bg-white p-4 rounded-md shadow">
+              <div className="space-y-8">
+                <div className="card border border-white/5 backdrop-blur-sm p-0 overflow-hidden">
                   <Suspense fallback={
-                    <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-md">
-                      <div className="text-gray-500">Loading map...</div>
+                    <div className="w-full h-96 flex items-center justify-center bg-[#292929]">
+                      <div className="text-gray-400 animate-pulse tracking-wider">Loading map...</div>
                     </div>
                   }>
                     <ErrorBoundary>
@@ -259,37 +262,43 @@ export default function Locator() {
                   </Suspense>
                 </div>
                 
-                <h2 className="text-xl font-semibold">Found {groups.length} groups</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-light tracking-wide">Found <span className="font-normal">{groups.length}</span> groups</h2>
+                  
+                  <div className="text-sm text-gray-400">
+                    Showing all results
+                  </div>
+                </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {groups.map((group) => (
-                    <div key={group.id} className="bg-white shadow-md rounded-lg p-6">
+                    <div key={group.id} className="card border border-white/5 backdrop-blur-sm hover:border-white/10 transition-all">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-start">
                         <div>
-                          <h3 className="text-lg font-semibold mb-2">{group.name}</h3>
-                          <p className="text-gray-600 mb-4 text-sm flex items-center">
-                            <FaMapMarkerAlt className="mr-1" /> 
+                          <h3 className="text-xl font-light tracking-wide mb-2">{group.name}</h3>
+                          <p className="text-gray-400 mb-4 text-xs flex items-center">
+                            <FaMapMarkerAlt className="mr-1 text-gray-500" /> 
                             {[group.city, group.state].filter(Boolean).join(', ')}
                           </p>
-                          <p className="text-gray-700 mb-4">
+                          <p className="text-gray-300 mb-6 text-sm font-light">
                             {group.description?.length && group.description.length > 150
                               ? `${group.description.substring(0, 150)}...`
                               : group.description}
                           </p>
                         </div>
                         
-                        <div className="mt-4 md:mt-0 flex flex-col space-y-2">
+                        <div className="mt-4 md:mt-0 flex flex-col space-y-3">
                           <button
                             onClick={() => sendMessage(group.id)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                            className="btn-primary"
                           >
                             Contact Group
                           </button>
                           
                           <button
-                            className="bg-gray-100 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
+                            className="btn-secondary"
                           >
-                            <FaInfo className="mr-2" /> View Details
+                            <FaInfoCircle className="mr-2" /> View Details
                           </button>
                         </div>
                       </div>
@@ -298,39 +307,59 @@ export default function Locator() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white shadow-md rounded-lg p-6 text-center">
-                <div className="mb-4">
-                  <FaSearch className="mx-auto text-gray-400 text-5xl" />
+              <div className="card border border-white/5 backdrop-blur-sm text-center p-12">
+                <div className="flex justify-center mb-6">
+                  <div className="w-16 h-16 rounded-full bg-[#3a3a3a] flex items-center justify-center">
+                    <FaSearch className="text-gray-400 text-2xl" />
+                  </div>
                 </div>
-                <h2 className="text-xl font-semibold mb-2">No groups found</h2>
-                <p className="text-gray-600 mb-4">
+                <h2 className="text-xl font-light tracking-wide mb-3">No groups found</h2>
+                <p className="text-gray-400 mb-8 max-w-md mx-auto">
                   We couldn't find any groups matching your search criteria. Try adjusting your filters or consider registering a new group.
                 </p>
                 <Link
                   href="/groups/register"
-                  className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="btn-primary inline-block"
                 >
                   Register a Group
                 </Link>
               </div>
             )
           ) : (
-            <div className="bg-white shadow-md rounded-lg p-6 text-center">
-              <div className="mb-4">
-                <FaUserCircle className="mx-auto text-gray-400 text-5xl" />
+            <div className="card border border-white/5 backdrop-blur-sm text-center p-12">
+              <div className="flex justify-center mb-6">
+                <div className="w-20 h-20 rounded-full bg-[#3a3a3a] flex items-center justify-center">
+                  <FaSlack className="text-gray-400 text-2xl" />
+                </div>
               </div>
-              <h2 className="text-xl font-semibold mb-2">Find Your Community</h2>
-              <p className="text-gray-600 mb-4">
+              <h2 className="text-2xl font-light tracking-wide mb-3">Find Your Community</h2>
+              <p className="text-gray-400 mb-4 max-w-lg mx-auto">
                 Use the search filters to find support groups and communities in your area. 
                 You can search by location and keywords to find the perfect match for your needs.
               </p>
-              <p className="text-gray-600">
+              <p className="text-gray-500 mb-8">
                 Don't see what you're looking for? Consider {' '}
-                <Link href="/groups/register" className="text-blue-600 hover:underline">
+                <Link href="/groups/register" className="text-blue-400 hover:text-blue-300 hover:underline">
                   registering your own group
                 </Link>
                 .
               </p>
+              
+              <div className="flex flex-col md:flex-row justify-center gap-4">
+                <button
+                  onClick={handleSearch}
+                  className="btn-primary"
+                >
+                  Show All Groups
+                </button>
+                
+                <Link
+                  href="/groups/register"
+                  className="btn-secondary"
+                >
+                  Register a Group
+                </Link>
+              </div>
             </div>
           )}
         </div>

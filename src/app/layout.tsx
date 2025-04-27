@@ -19,7 +19,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <head>
+        {/* Force dark mode by making the dark styles load first */}
+        <meta name="color-scheme" content="dark" />
+        {/* Preload the earth textures */}
+        <link rel="preload" href="/earth-map.jpg" as="image" />
+      </head>
+      <body className={`${inter.className} bg-[#292929] text-white min-h-screen`}>
         <div className="flex flex-col min-h-screen">
           <Header />
           <main className="flex-grow">
