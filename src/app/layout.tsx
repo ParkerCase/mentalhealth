@@ -1,28 +1,57 @@
-// src/app/layout.tsx
+'use client'
+
 import './globals.css'
 import { Inter } from 'next/font/google'
 import Header from '@/components/common/Header'
 import Footer from '@/components/common/Footer'
 import ChatbotWidget from '@/components/chatbot/ChatbotWidget'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
-
-export const metadata = {
-  title: 'Social Connection Platform',
-  description: 'Connect with groups and individuals in your community',
-}
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
+  const router = useRouter()
+  
+  // Determine if current page should have special body class
+  const isHomePage = pathname === '/'
+  const isLocatorPage = pathname === '/locator'
+  
+  // Add appropriate class to body element
+  useEffect(() => {
+    document.body.classList.remove('home-page', 'locator-page')
+    
+    if (isHomePage) {
+      document.body.classList.add('home-page')
+    } else if (isLocatorPage) {
+      document.body.classList.add('locator-page')
+    }
+    
+    // Force dark mode
+    document.documentElement.classList.add('dark')
+    document.body.style.backgroundColor = '#292929'
+    document.body.style.color = '#FFFFFF'
+    
+    return () => {
+      document.body.classList.remove('home-page', 'locator-page')
+    }
+  }, [isHomePage, isLocatorPage])
+  
   return (
     <html lang="en">
+      <head>
+        <title>Social Connection Platform</title>
+        <meta name="description" content="Connect with groups and individuals in your community" />
+      </head>
       <body className={inter.className}>
         <div className="flex flex-col min-h-screen">
           <Header />
-          <main className="flex-grow">
+          <main className={`flex-grow ${(isHomePage || isLocatorPage) ? 'pt-0' : 'pt-20'}`}>
             {children}
           </main>
           <Footer />

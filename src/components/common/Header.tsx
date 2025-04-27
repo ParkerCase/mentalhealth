@@ -3,17 +3,32 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { FaEnvelope } from 'react-icons/fa'
+import { FaEnvelope, FaBars, FaTimes } from 'react-icons/fa'
 
 export default function Header() {
   const pathname = usePathname()
   const { user, profile, initialize, loading } = useAuthStore()
+  const [scrolled, setScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     initialize()
   }, [initialize])
+  
+  // Track scroll position to add background when scrolled
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50)
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Check if we should use a transparent header for certain pages
+  const isTransparentPage = pathname === '/' || pathname === '/locator'
 
   const navItems = [
     { name: 'Home', path: '/' },
@@ -24,7 +39,13 @@ export default function Header() {
   ]
 
   return (
-    <header className="bg-transparent py-6">
+    <header className={`fixed top-0 left-0 right-0 z-50 py-6 transition-all duration-300 ${
+      isTransparentPage 
+        ? scrolled 
+          ? 'bg-[#292929]/80 backdrop-blur-md shadow-lg' 
+          : 'bg-transparent'
+        : 'bg-[#292929]/80 backdrop-blur-md'
+    }`}>
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center">
           <div>
@@ -33,6 +54,7 @@ export default function Header() {
             </Link>
           </div>
           
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-4">
             {navItems.map((item) => (
               <Link 
@@ -45,6 +67,7 @@ export default function Header() {
             ))}
           </nav>
           
+          {/* User Profile/Login Section */}
           <div className="flex items-center space-x-6">
             {!loading && user ? (
               <div className="flex items-center space-x-4">
@@ -89,27 +112,42 @@ export default function Header() {
                 </Link>
               </div>
             )}
+            
+            {/* Mobile menu button */}
+            <button 
+              className="md:hidden text-white focus:outline-none"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? (
+                <FaTimes className="h-6 w-6" />
+              ) : (
+                <FaBars className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
         
-        {/* Mobile navigation - hidden on desktop */}
-        <div className="md:hidden mt-4">
-          <div className="flex flex-wrap gap-2">
-            {navItems.map((item) => (
-              <Link 
-                key={item.path}
-                href={item.path}
-                className={`px-3 py-2 text-xs uppercase tracking-wider ${
-                  pathname === item.path
-                    ? 'bg-white/10 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+        {/* Mobile navigation */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 py-4 border-t border-white/10 animate-fadeIn">
+            <div className="flex flex-col space-y-2">
+              {navItems.map((item) => (
+                <Link 
+                  key={item.path}
+                  href={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-3 py-2 text-sm uppercase tracking-wider ${
+                    pathname === item.path
+                      ? 'bg-white/10 text-white'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   )
