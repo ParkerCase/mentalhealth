@@ -33,7 +33,8 @@ const Globe = () => {
     }
   );
 
-  return <DynamicGlobeContent />;
+  // Pass an empty callback for onRegionSelect to satisfy TypeScript
+  return <DynamicGlobeContent onRegionSelect={() => {}} />;
 };
 
 export default Globe;

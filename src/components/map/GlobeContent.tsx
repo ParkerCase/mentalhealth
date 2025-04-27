@@ -4,14 +4,18 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 
+interface DramaticSunProps {
+  position?: [number, number, number];
+}
+
 // Enhanced Sun component with dramatic rays effect
-const DramaticSun = ({ position = [-2.5, 0, 0] }) => {
-  const sunRef = useRef();
-  const flareRef = useRef();
-  const raysRef = useRef();
+const DramaticSun: React.FC<DramaticSunProps> = ({ position = [-2.5, 0, 0] }) => {
+  const sunRef = useRef<THREE.Mesh>(null);
+  const flareRef = useRef<THREE.Sprite>(null);
+  const raysRef = useRef<THREE.Sprite>(null);
   
   // Create lens flare textures
-  const [flareTexture, setFlareTexture] = useState(null);
+  const [flareTexture, setFlareTexture] = useState<THREE.CanvasTexture | null>(null);
   
   useEffect(() => {
     // Create lens flare effect
@@ -20,39 +24,41 @@ const DramaticSun = ({ position = [-2.5, 0, 0] }) => {
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
     
-    // Draw a radial gradient for the lens flare
-    const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
-    gradient.addColorStop(0, 'rgba(255, 230, 170, 1)');
-    gradient.addColorStop(0.1, 'rgba(255, 180, 100, 0.8)');
-    gradient.addColorStop(0.2, 'rgba(255, 140, 40, 0.6)');
-    gradient.addColorStop(0.4, 'rgba(255, 100, 30, 0.4)');
-    gradient.addColorStop(0.8, 'rgba(255, 50, 10, 0.1)');
-    gradient.addColorStop(1, 'rgba(255, 50, 10, 0)');
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 512, 512);
-    
-    // Create rays
-    ctx.save();
-    ctx.translate(256, 256);
-    ctx.strokeStyle = 'rgba(255, 255, 200, 0.3)';
-    ctx.lineWidth = 2;
-    
-    for (let i = 0; i < 20; i++) {
-      const angle = (Math.PI * 2) * (i / 20);
-      const length = 200 + Math.random() * 50;
+    if (ctx) {
+      // Draw a radial gradient for the lens flare
+      const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+      gradient.addColorStop(0, 'rgba(255, 230, 170, 1)');
+      gradient.addColorStop(0.1, 'rgba(255, 180, 100, 0.8)');
+      gradient.addColorStop(0.2, 'rgba(255, 140, 40, 0.6)');
+      gradient.addColorStop(0.4, 'rgba(255, 100, 30, 0.4)');
+      gradient.addColorStop(0.8, 'rgba(255, 50, 10, 0.1)');
+      gradient.addColorStop(1, 'rgba(255, 50, 10, 0)');
       
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(Math.cos(angle) * length, Math.sin(angle) * length);
-      ctx.stroke();
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 512, 512);
+      
+      // Create rays
+      ctx.save();
+      ctx.translate(256, 256);
+      ctx.strokeStyle = 'rgba(255, 255, 200, 0.3)';
+      ctx.lineWidth = 2;
+      
+      for (let i = 0; i < 20; i++) {
+        const angle = (Math.PI * 2) * (i / 20);
+        const length = 200 + Math.random() * 50;
+        
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(angle) * length, Math.sin(angle) * length);
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+      
+      // Convert to texture
+      const texture = new THREE.CanvasTexture(canvas);
+      setFlareTexture(texture);
     }
-    
-    ctx.restore();
-    
-    // Convert to texture
-    const texture = new THREE.CanvasTexture(canvas);
-    setFlareTexture(texture);
   }, []);
   
   useFrame(({ clock }) => {
@@ -228,7 +234,7 @@ const createAuroraShader = () => {
 
 // Custom atmospheric glow effect
 const AtmosphereGlow = () => {
-  const atmosphereRef = useRef();
+  const atmosphereRef = useRef<THREE.Mesh>(null);
   
   useFrame(({ clock }) => {
     if (atmosphereRef.current) {
@@ -261,12 +267,14 @@ const createNightLightsTexture = () => {
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
   
+  if (!ctx) return new THREE.CanvasTexture(canvas);
+  
   // Fill with black
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
   // Draw random city lights clusters
-  const drawCluster = (x, y, size, density) => {
+  const drawCluster = (x: number, y: number, size: number, density: number) => {
     const lights = size * density;
     for (let i = 0; i < lights; i++) {
       const distance = Math.random() * size;
@@ -329,16 +337,20 @@ const createNightLightsTexture = () => {
   return texture;
 };
 
+interface EarthProps {
+  handleRegionClick?: (region: string) => void;
+}
+
 // Enhanced Earth component
-const Earth = ({ handleRegionClick }) => {
-  const earthRef = useRef();
-  const cloudsRef = useRef();
-  const auroraRef = useRef();
-  const nightLightsRef = useRef();
-  const [textures, setTextures] = useState([]);
+const Earth: React.FC<EarthProps> = ({ handleRegionClick }) => {
+  const earthRef = useRef<THREE.Mesh>(null);
+  const cloudsRef = useRef<THREE.Mesh>(null);
+  const auroraRef = useRef<THREE.Mesh>(null);
+  const nightLightsRef = useRef<THREE.Mesh>(null);
+  const [textures, setTextures] = useState<THREE.Texture[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState(null);
-  const [nightLightsTexture, setNightLightsTexture] = useState(null);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [nightLightsTexture, setNightLightsTexture] = useState<THREE.Texture | null>(null);
   
   // Create aurora shader
   const auroraShader = useMemo(() => createAuroraShader(), []);
@@ -362,8 +374,8 @@ const Earth = ({ handleRegionClick }) => {
         // Apply crossOrigin to the loader
         textureLoader.setCrossOrigin('anonymous');
         
-        const loadTexture = (url) => {
-          return new Promise((resolve, reject) => {
+        const loadTexture = (url: string) => {
+          return new Promise<THREE.Texture>((resolve, reject) => {
             textureLoader.load(
               url, 
               texture => resolve(texture),
@@ -574,8 +586,12 @@ const SpaceBackground = () => {
   );
 };
 
+interface GlobeContentProps {
+  onRegionSelect: (region: string) => void;
+}
+
 // Main globe component
-export default function GlobeContent({ onRegionSelect }) {
+export default function GlobeContent({ onRegionSelect }: GlobeContentProps) {
   return (
     <div className="h-full">
       <Canvas 
@@ -602,7 +618,7 @@ export default function GlobeContent({ onRegionSelect }) {
         <DramaticSun position={[-3, 0, 0]} />
         
         {/* Earth and its effects */}
-        <Earth handleRegionClick={onRegionSelect} />
+        <Earth handleRegionClick={(region) => onRegionSelect(region)} />
         
         {/* Background stars from drei */}
         <Stars radius={100} depth={50} count={1000} factor={4} saturation={0.5} fade={true} />
