@@ -1,12 +1,13 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
+const path = require("path");
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
   images: {
     domains: [
-      "pbzjrfcoipldrkpytikw.supabase.co", // Replace with your Supabase project domain
+      "pbzjrfcoipldrkpytikw.supabase.co",
       "avatars.githubusercontent.com",
       "lh3.googleusercontent.com",
       "graph.facebook.com",
@@ -17,27 +18,43 @@ const nextConfig = {
     serverActions: true,
   },
   webpack: (config, { isServer }) => {
-    // Add resolver for Three.js WebGPU issue
+    // Cesium configuration
     config.resolve.alias = {
       ...config.resolve.alias,
-      "three/webgpu": false,
-      "three/addons/": "three/examples/jsm/",
+      cesium: path.resolve(__dirname, "node_modules/cesium"),
     };
 
-    // Fix for BatchedMesh import error in three-mesh-bvh
+    // Ignore specific warnings
+    config.ignoreWarnings = [
+      /Failed to parse source map/,
+      /Cannot find module/,
+    ];
+
+    // Handle asset loading for non-server side
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+
+    // Handle Cesium worker and asset loading
     config.module.rules.push({
-      test: /node_modules\/three-mesh-bvh\/src\/utils\/ExtensionUtilities\.js$/,
-      use: {
-        loader: "string-replace-loader",
-        options: {
-          search: "import { BatchedMesh } from 'three';",
-          replace: "// BatchedMesh import removed as it's not available",
-          flags: "g",
-        },
+      test: /\.(png|gif|jpg|jpeg|svg|xml|json|wasm|workers)$/,
+      type: "asset/resource",
+      generator: {
+        filename: "static/cesium/[hash][ext]",
       },
     });
 
     return config;
+  },
+
+  // Ensure Cesium assets are available
+  publicRuntimeConfig: {
+    cesiumBaseUrl: "/cesium/",
   },
 };
 

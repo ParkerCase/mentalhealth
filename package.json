@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prepare": "mkdir -p public/cesium && cp -r node_modules/cesium/Build/Cesium/* public/cesium/",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -15,25 +16,32 @@
     "@supabase/auth-helpers-nextjs": "^0.7.4",
     "@supabase/ssr": "^0.0.10",
     "@supabase/supabase-js": "^2.38.4",
+    "@types/webpack-env": "^1.18.8",
+    "bufferutil": "^4.0.9",
+    "cesium": "^1.128.0",
     "date-fns": "^2.30.0",
+    "file-loader": "^6.2.0",
     "globe.gl": "^2.41.4",
     "lodash": "^4.17.21",
     "mapbox-gl": "^2.15.0",
-    "next": "^13.5.6",
+    "next": "^15.3.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-globe.gl": "^2.33.2",
     "react-icons": "^4.12.0",
+    "resium": "^1.19.0-beta.1",
     "swr": "^2.2.4",
     "three": "^0.160.0",
+    "utf-8-validate": "^6.0.5",
     "zustand": "^4.4.6"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.202",
+    "@types/cesium": "^1.67.14",
+    "@types/lodash": "^4.17.16",
     "@types/mapbox__mapbox-gl-geocoder": "^4.7.7",
     "@types/mapbox-gl": "^2.7.19",
-    "@types/node": "^20.9.2",
-    "@types/react": "^18.2.37",
+    "@types/node": "^20.17.32",
+    "@types/react": "^18.3.20",
     "@types/react-dom": "^18.2.15",
     "@types/three": "^0.158.3",
     "autoprefixer": "^10.4.16",
@@ -42,6 +50,6 @@
     "postcss": "^8.4.31",
     "string-replace-loader": "^3.1.0",
     "tailwindcss": "^3.3.5",
-    "typescript": "^5.2.2"
+    "typescript": "^5.8.3"
   }
 }
