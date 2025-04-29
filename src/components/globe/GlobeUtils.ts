@@ -66,17 +66,33 @@ export function createFlightPathMaterial(
   color: Cesium.Color = Cesium.Color.BLUE,
   glowPower: number = 0.2,
   taperPower: number = 1.0
-): any {
+): Cesium.Material | Cesium.MaterialProperty {
   try {
     // Try to use PolylineGlowMaterialProperty if available
-    return new Cesium.PolylineGlowMaterialProperty({
-      glowPower: glowPower,
-      color: color,
-      taperPower: taperPower
-    });
+    // Note: Not all Cesium versions support taperPower, so we check for compatibility
+    const propertyOptions: Record<string, Cesium.Property> = {
+      glowPower: new Cesium.ConstantProperty(glowPower),
+      color: new Cesium.ConstantProperty(color)
+    };
+    
+    // Only add taperPower if the Cesium version supports it
+    // This avoids the TypeScript error about unknown properties
+    if ('taperPower' in Cesium.PolylineGlowMaterialProperty.prototype) {
+      // This is a workaround for TypeScript - at runtime this will work if supported
+      (propertyOptions as any).taperPower = new Cesium.ConstantProperty(taperPower);
+    }
+    
+    return new Cesium.PolylineGlowMaterialProperty(propertyOptions);
   } catch (e) {
     // Fallback to simple color material
-    return color.withAlpha(0.7);
+    try {
+      return new Cesium.ColorMaterialProperty(color.withAlpha(0.7));
+    } catch (e2) {
+      // Final fallback if ColorMaterialProperty is not available
+      return Cesium.Material.fromType('Color', {
+        color: color.withAlpha(0.7)
+      });
+    }
   }
 }
 
@@ -160,17 +176,25 @@ export function getRandomPosition(
 }
 
 /**
- * Create a simple static color with alpha value
- * This is a simplified version that doesn't use CallbackProperty
+ * Create a material property with color and alpha
  * @param baseColor - The base color
  * @param alpha - Alpha value (0-1)
- * @returns A color with the specified alpha
+ * @returns A color material property
  */
-export function createSimpleAlphaColor(
+export function createColorMaterial(
   baseColor: Cesium.Color,
   alpha: number = 0.5
-): Cesium.Color {
-  return baseColor.withAlpha(alpha);
+): Cesium.MaterialProperty {
+  try {
+    return new Cesium.ColorMaterialProperty(baseColor.withAlpha(alpha));
+  } catch (e) {
+    // Fallback for older Cesium versions
+    console.warn('Error creating color material:', e);
+    return new Cesium.PolylineOutlineMaterialProperty({
+      color: new Cesium.ConstantProperty(baseColor.withAlpha(alpha)),
+      outlineWidth: new Cesium.ConstantProperty(0)
+    });
+  }
 }
 
 export default {
@@ -178,5 +202,5 @@ export default {
   createFlightPathMaterial,
   configureViewer,
   getRandomPosition,
-  createSimpleAlphaColor
+  createColorMaterial
 };

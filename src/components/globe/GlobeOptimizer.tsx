@@ -16,6 +16,13 @@ interface GlobeOptimizerProps {
 }
 
 /**
+ * Helper to safely handle both Promise and direct return for terrain providers
+ */
+function isPromiseLike<T>(obj: any): obj is Promise<T> {
+  return !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
+}
+
+/**
  * Optimizes the Globe component for different performance targets
  */
 const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
@@ -27,6 +34,49 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
   globalFogDensity = 0
 }) => {
   const { viewer, scene } = useCesium();
+
+  // Helper function to handle terrain provider creation safely
+  const createAndSetTerrainProvider = (
+    createFn: () => any,
+    options: { requestVertexNormals?: boolean, requestWaterMask?: boolean } = {}
+  ) => {
+    if (!viewer) return;
+    
+    try {
+      // Try to create the terrain provider
+      let terrainProvider;
+      
+      try {
+        terrainProvider = createFn();
+      } catch (e) {
+        console.warn('Error creating terrain provider:', e);
+        terrainProvider = new Cesium.EllipsoidTerrainProvider();
+      }
+      
+      // Handle both Promise-based and direct return scenarios
+      if (isPromiseLike<Cesium.TerrainProvider>(terrainProvider)) {
+        // Using Promise.resolve to safely handle the promise
+        Promise.resolve(terrainProvider)
+          .then((resolvedProvider: Cesium.TerrainProvider) => {
+            if (viewer) {
+              viewer.terrainProvider = resolvedProvider;
+            }
+          })
+          .catch((error: any) => {
+            console.warn('Failed to load terrain provider:', error);
+            if (viewer) {
+              viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+            }
+          });
+      } else {
+        // Direct assignment for non-Promise return value
+        viewer.terrainProvider = terrainProvider;
+      }
+    } catch (e) {
+      console.warn('Failed to set terrain provider:', e);
+      viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+    }
+  };
 
   useEffect(() => {
     if (!viewer || !scene) return;
@@ -80,11 +130,7 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           scene.globe.maximumScreenSpaceError = 4;
           
           // Use simple terrain
-          try {
-            viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-          } catch (e) {
-            console.warn('Could not set terrain provider:', e);
-          }
+          viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
           break;
           
         case 'medium':
@@ -106,28 +152,13 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           
           // Use terrain with moderate detail if available
           if (dynamicTerrain) {
-            try {
-              const createWorldTerrainPromise = Cesium.createWorldTerrain({
+            createAndSetTerrainProvider(
+              () => Cesium.createWorldTerrain({
                 requestVertexNormals: false,
                 requestWaterMask: false
-              });
-              
-              // Handle both Promise and direct return cases
-              if (createWorldTerrainPromise.then) {
-                createWorldTerrainPromise.then((terrain: any) => {
-                  if (viewer) {
-                    viewer.terrainProvider = terrain;
-                  }
-                }).catch((error: any) => {
-                  console.warn('Failed to load world terrain:', error);
-                });
-              } else {
-                // Handle as direct return (older Cesium versions)
-                viewer.terrainProvider = createWorldTerrainPromise;
-              }
-            } catch (e) {
-              console.warn('Could not create world terrain:', e);
-            }
+              }),
+              { requestVertexNormals: false, requestWaterMask: false }
+            );
           }
           break;
           
@@ -159,28 +190,13 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           }
           
           // Use terrain with high detail
-          try {
-            const createWorldTerrainPromise = Cesium.createWorldTerrain({
+          createAndSetTerrainProvider(
+            () => Cesium.createWorldTerrain({
               requestVertexNormals: true,
               requestWaterMask: false
-            });
-            
-            // Handle both Promise and direct return cases
-            if (createWorldTerrainPromise.then) {
-              createWorldTerrainPromise.then((terrain: any) => {
-                if (viewer) {
-                  viewer.terrainProvider = terrain;
-                }
-              }).catch((error: any) => {
-                console.warn('Failed to load world terrain:', error);
-              });
-            } else {
-              // Handle as direct return (older Cesium versions)
-              viewer.terrainProvider = createWorldTerrainPromise;
-            }
-          } catch (e) {
-            console.warn('Could not create world terrain:', e);
-          }
+            }),
+            { requestVertexNormals: true, requestWaterMask: false }
+          );
           break;
           
         case 'ultra':
@@ -211,28 +227,13 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           }
           
           // Use terrain with maximum detail
-          try {
-            const createWorldTerrainPromise = Cesium.createWorldTerrain({
+          createAndSetTerrainProvider(
+            () => Cesium.createWorldTerrain({
               requestVertexNormals: true,
               requestWaterMask: true
-            });
-            
-            // Handle both Promise and direct return cases
-            if (createWorldTerrainPromise.then) {
-              createWorldTerrainPromise.then((terrain: any) => {
-                if (viewer) {
-                  viewer.terrainProvider = terrain;
-                }
-              }).catch((error: any) => {
-                console.warn('Failed to load world terrain:', error);
-              });
-            } else {
-              // Handle as direct return (older Cesium versions)
-              viewer.terrainProvider = createWorldTerrainPromise;
-            }
-          } catch (e) {
-            console.warn('Could not create world terrain:', e);
-          }
+            }),
+            { requestVertexNormals: true, requestWaterMask: true }
+          );
           break;
       }
       

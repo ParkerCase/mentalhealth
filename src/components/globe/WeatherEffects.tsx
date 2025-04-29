@@ -18,6 +18,7 @@ declare global {
   }
 }
 
+// Fixed: Explicitly define WeatherType to include 'clear'
 type WeatherType = 'clouds' | 'storm' | 'fog' | 'clear';
 
 interface WeatherEffectsProps {
@@ -36,7 +37,7 @@ interface WeatherEffectsProps {
  * Note: This is a simplified version that will work with limited Cesium features
  */
 const WeatherEffects: React.FC<WeatherEffectsProps> = ({
-  type = 'clouds',
+  type = 'clear',
   intensity = 0.5,
   location,
   animate = true
@@ -129,6 +130,7 @@ const WeatherEffects: React.FC<WeatherEffectsProps> = ({
       }
       
       // Legacy particle system implementation
+      // Fixed the type comparison with proper checking
       if (type !== 'clear' && Cesium.ParticleSystem) {
         try {
           const defaultPosition = Cesium.Cartesian3.fromDegrees(

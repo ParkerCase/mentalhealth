@@ -12,6 +12,13 @@ interface GlobeControlsProps {
 }
 
 /**
+ * Helper to safely handle promises for terrain providers
+ */
+function isTerrainProviderPromise(value: any): value is Promise<Cesium.TerrainProvider> {
+  return value && typeof value === 'object' && typeof value.then === 'function';
+}
+
+/**
  * Interactive controls for the Globe component
  */
 const GlobeControls: React.FC<GlobeControlsProps> = ({ 
@@ -101,6 +108,40 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
     } else {
       setActiveTab('search');
       setIsExpanded(true);
+    }
+  };
+  
+  // Helper function to safely create and set terrain provider
+  const safelySetTerrainProvider = (createFn: () => any, fallbackFn: () => Cesium.TerrainProvider) => {
+    if (!viewer) return;
+    
+    try {
+      const terrainProviderResult = createFn();
+      
+      // Handle both Promise and direct return safely
+      if (isTerrainProviderPromise(terrainProviderResult)) {
+        // It's a Promise
+        terrainProviderResult
+          .then((provider: Cesium.TerrainProvider) => {
+            if (viewer) {
+              viewer.terrainProvider = provider;
+            }
+          })
+          .catch((error: any) => {
+            console.warn('Failed to load terrain provider:', error);
+            if (viewer) {
+              viewer.terrainProvider = fallbackFn();
+            }
+          });
+      } else {
+        // Direct return
+        viewer.terrainProvider = terrainProviderResult;
+      }
+    } catch (e) {
+      console.warn('Error creating terrain provider:', e);
+      if (viewer) {
+        viewer.terrainProvider = fallbackFn();
+      }
     }
   };
   
@@ -233,21 +274,17 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
                   if (viewer) {
                     if (e.target.checked) {
                       // Re-enable terrain
-                      try {
-                        const terrainProvider = Cesium.createWorldTerrain();
-                        // Handle both Promise and direct return
-                        if (typeof terrainProvider.then === 'function') {
-                          terrainProvider.then((terrain: any) => {
-                            if (viewer) {
-                              viewer.terrainProvider = terrain;
-                            }
-                          });
-                        } else {
-                          viewer.terrainProvider = terrainProvider;
-                        }
-                      } catch (e) {
-                        console.warn('Failed to create terrain provider:', e);
-                      }
+                      safelySetTerrainProvider(
+                        () => {
+                          try {
+                            return Cesium.createWorldTerrain();
+                          } catch (e) {
+                            console.warn('Error creating world terrain:', e);
+                            throw e; // Propagate error to be caught by safelySetTerrainProvider
+                          }
+                        },
+                        () => new Cesium.EllipsoidTerrainProvider()
+                      );
                     } else {
                       // Disable terrain (flat earth)
                       viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
