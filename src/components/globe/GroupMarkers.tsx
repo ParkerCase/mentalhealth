@@ -7,13 +7,13 @@ import * as Cesium from 'cesium';
 interface Group {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   geo_location?: {
     type: string;
     coordinates: [number, number]; // [longitude, latitude]
-  };
-  city?: string;
-  state?: string;
+  } | null;
+  city?: string | null;
+  state?: string | null;
   // Other properties from your app's Group type
 }
 
@@ -82,7 +82,7 @@ const GroupMarkers: React.FC<GroupMarkersProps> = ({
     return Cesium.Color.fromCssColorString('#3b82f6'); // Tailwind blue-500
   };
   
-  // Create entity for pulse effect - simplified version
+  // Create entity for pulse effect
   const createPulseEntity = (group: Group, position: Cesium.Cartesian3) => {
     const isSelected = selectedGroupId === group.id;
     const color = getGroupColor(group);

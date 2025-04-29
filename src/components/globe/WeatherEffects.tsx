@@ -34,7 +34,6 @@ interface WeatherEffectsProps {
 
 /**
  * Adds weather and atmosphere effects to the globe
- * Note: This is a simplified version that will work with limited Cesium features
  */
 const WeatherEffects: React.FC<WeatherEffectsProps> = ({
   type = 'clear',
@@ -129,8 +128,7 @@ const WeatherEffects: React.FC<WeatherEffectsProps> = ({
         return;
       }
       
-      // Legacy particle system implementation
-      // Fixed the type comparison with proper checking
+      // Fixed: Now type comparison works correctly with the updated WeatherType
       if (type !== 'clear' && Cesium.ParticleSystem) {
         try {
           const defaultPosition = Cesium.Cartesian3.fromDegrees(

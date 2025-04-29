@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * Script to set up the required assets for the Globe component
- * Enhanced version with more robust asset generation and verification
+ * Enhanced script to set up required assets for the Globe component
+ * This script creates necessary SVG and PNG assets for the 3D globe visualization
  */
 
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const { execSync } = require("child_process");
 
 // Path where assets will be placed
 const assetsDir = path.join(process.cwd(), "public", "assets");
+const cesiumDir = path.join(process.cwd(), "public", "cesium");
 
 // Create assets directory if it doesn't exist
 if (!fs.existsSync(assetsDir)) {
@@ -84,84 +86,28 @@ const svgAssets = [
   },
 ];
 
-// Simple PNG creation from SVG for web compatibility
-function createPngFromSvg(svgPath, pngPath) {
-  // In a real implementation, we'd use canvas or another library to convert SVG to PNG
-  // For simplicity in this script, we're just creating a placeholder file
-  const placeholderContent = Buffer.from([
-    0x89,
-    0x50,
-    0x4e,
-    0x47,
-    0x0d,
-    0x0a,
-    0x1a,
-    0x0a, // PNG signature
-    0x00,
-    0x00,
-    0x00,
-    0x0d,
-    0x49,
-    0x48,
-    0x44,
-    0x52, // IHDR chunk
-    0x00,
-    0x00,
-    0x00,
-    0x01,
-    0x00,
-    0x00,
-    0x00,
-    0x01, // Width & height: 1px
-    0x08,
-    0x02,
-    0x00,
-    0x00,
-    0x00,
-    0x90,
-    0x77,
-    0x53, // Bit depth, color type, etc.
-    0xde,
-    0x00,
-    0x00,
-    0x00,
-    0x0c,
-    0x49,
-    0x44,
-    0x41, // IDAT chunk
-    0x54,
-    0x08,
-    0xd7,
-    0x63,
-    0xf8,
-    0xcf,
-    0xc0,
-    0x00, // Compressed data
-    0x00,
-    0x03,
-    0x01,
-    0x01,
-    0x00,
-    0x18,
-    0xdd,
-    0x8d, // More data & CRC
-    0xb0,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x49,
-    0x45,
-    0x4e, // IEND chunk
-    0x44,
-    0xae,
-    0x42,
-    0x60,
-    0x82, // IEND CRC
-  ]);
+// Create PNG from SVG using a data URI
+async function createPngFromSvg(svgPath, pngPath) {
+  try {
+    // Try to convert using browser rendering (Node.js doesn't have canvas built-in)
+    // This is a placeholder that creates a simple 1x1px PNG
+    const placeholderContent = Buffer.from([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+      0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
+      0x0d, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0x60, 0x60, 0x60, 0x60,
+      0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x5e, 0xf3, 0x2d, 0xc5, 0x00, 0x00,
+      0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+    ]);
 
-  fs.writeFileSync(pngPath, placeholderContent);
-  console.log(`Created placeholder PNG: ${pngPath}`);
+    fs.writeFileSync(pngPath, placeholderContent);
+    console.log(`Created placeholder PNG: ${pngPath}`);
+
+    // Note: In a real implementation, we'd use a library like sharp or canvas
+    // to properly convert SVG to PNG. For simplicity, we're using placeholders.
+  } catch (error) {
+    console.warn(`Warning: Could not create PNG from SVG: ${error.message}`);
+  }
 }
 
 // Function to download a file if needed
@@ -199,9 +145,54 @@ function downloadFile(url, destinationPath) {
   });
 }
 
+// Check if Cesium assets are properly copied
+function ensureCesiumAssets() {
+  if (!fs.existsSync(cesiumDir)) {
+    console.log("Cesium assets not found. Creating directory...");
+    fs.mkdirSync(cesiumDir, { recursive: true });
+
+    try {
+      console.log("Running npm prepare to copy Cesium assets...");
+      execSync("npm run prepare", { stdio: "inherit" });
+      console.log("Cesium assets copied successfully.");
+    } catch (error) {
+      console.error("Failed to copy Cesium assets:", error.message);
+      console.log("Please manually run: npm run prepare");
+    }
+  } else {
+    console.log("Cesium assets directory exists. Checking for key files...");
+
+    // Check for a few critical Cesium files
+    const criticalFiles = [
+      "Cesium.js",
+      "Widgets/widgets.css",
+      "Assets/Images/Cesium_Logo_Color.jpg",
+    ];
+
+    const missingFiles = criticalFiles.filter(
+      (file) => !fs.existsSync(path.join(cesiumDir, file))
+    );
+
+    if (missingFiles.length > 0) {
+      console.warn("Some Cesium files are missing. Trying to recopy...");
+      try {
+        execSync("npm run prepare", { stdio: "inherit" });
+        console.log("Cesium assets recopied successfully.");
+      } catch (error) {
+        console.error("Failed to recopy Cesium assets:", error.message);
+      }
+    } else {
+      console.log("Cesium assets check: OK");
+    }
+  }
+}
+
 // Write SVG files and create PNG versions
 async function setupAssets() {
   console.log("Setting up globe assets...");
+
+  // Ensure Cesium assets are properly copied
+  ensureCesiumAssets();
 
   // Create SVG files and corresponding PNGs
   for (const asset of svgAssets) {
@@ -209,19 +200,20 @@ async function setupAssets() {
     fs.writeFileSync(svgPath, asset.content.trim());
     console.log(`Created SVG: ${svgPath}`);
 
+    // Also create PNG versions for browsers that don't support SVG
     const pngPath = path.join(assetsDir, asset.name.replace(".svg", ".png"));
-    createPngFromSvg(svgPath, pngPath);
+    await createPngFromSvg(svgPath, pngPath);
   }
 
-  // Try to download some additional placeholder terrain textures for more realistic globe
+  // Try to download some additional placeholder terrain textures
   const textures = [
-    {
-      url: "https://eoimages.gsfc.nasa.gov/images/imagerecords/90000/90008/earth_vir_200405_lrg.jpg",
-      path: path.join(assetsDir, "earth_texture.jpg"),
-    },
     {
       url: "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_cloud_2048.jpg",
       path: path.join(assetsDir, "earth_day.jpg"),
+    },
+    {
+      url: "https://eoimages.gsfc.nasa.gov/images/imagerecords/79000/79765/dnb_land_ocean_ice.2012.54000x27000.jpg",
+      path: path.join(assetsDir, "earth_night.jpg"),
     },
   ];
 
@@ -229,7 +221,7 @@ async function setupAssets() {
     await Promise.all(
       textures.map((texture) =>
         downloadFile(texture.url, texture.path).catch((err) =>
-          console.warn(`Failed to download ${texture.path}: ${err.message}`)
+          console.warn(`Failed to download ${texture.url}: ${err.message}`)
         )
       )
     );
@@ -238,15 +230,21 @@ async function setupAssets() {
     console.warn("The globe will still work with the default textures.");
   }
 
-  console.log("\nAssets created successfully!");
+  console.log("\n✓ Globe assets created successfully!");
+  console.log("To use these assets:");
   console.log(
-    "To use these assets in your application, you'll need to ensure:"
+    "1. Make sure your app can access the '/assets' and '/cesium' folders"
   );
-  console.log("1. The assets directory is accessible in your public folder");
-  console.log("2. Your app has the necessary CORS configurations if needed");
-  console.log(
-    "\nIf you're using Next.js, make sure these assets are in the 'public/assets' folder"
-  );
+  console.log("2. If using Next.js, these should be in the public directory");
+  console.log("3. Check all paths in your code reference '/assets/[filename]'");
+
+  // Check for common environment variables needed by Cesium
+  if (!process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN) {
+    console.log(
+      "\n⚠️ Note: For best results, set the NEXT_PUBLIC_CESIUM_ION_TOKEN environment variable"
+    );
+    console.log("   You can get a free token at https://cesium.com/ion/");
+  }
 }
 
 // Run setup

@@ -12,6 +12,39 @@ interface GlobeControlsProps {
 }
 
 /**
+ * Helper to create terrain provider with proper fallbacks
+ */
+function createCompatibleTerrainProvider(options: { 
+  requestVertexNormals?: boolean, 
+  requestWaterMask?: boolean 
+} = {}) {
+  try {
+    // Try different ways to access Cesium's terrain provider
+    if (typeof (Cesium as any).createWorldTerrain === 'function') {
+      return (Cesium as any).createWorldTerrain(options);
+    }
+    
+    // Try Cesium Ion if available (newer versions)
+    if (Cesium.Ion && typeof (Cesium.Ion as any).createWorldTerrain === 'function') {
+      return (Cesium.Ion as any).createWorldTerrain(options);
+    }
+    
+    // Check for CesiumTerrainProvider (older versions)
+    if (Cesium.CesiumTerrainProvider) {
+      return new Cesium.CesiumTerrainProvider({
+        url: 'https://assets.agi.com/stk-terrain/world'
+      });
+    }
+    
+    // Final fallback to flat terrain
+    return new Cesium.EllipsoidTerrainProvider();
+  } catch (e) {
+    console.warn('Error creating terrain provider:', e);
+    return new Cesium.EllipsoidTerrainProvider();
+  }
+}
+
+/**
  * Helper to safely handle promises for terrain providers
  */
 function isTerrainProviderPromise(value: any): value is Promise<Cesium.TerrainProvider> {
@@ -43,7 +76,7 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
     
     if (onFlyTo) {
       onFlyTo(lat, lng);
-    } else if (viewer) {
+    } else if (viewer && !viewer.isDestroyed()) {
       viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(lng, lat, 1000000),
         duration: 2
@@ -64,7 +97,7 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
           });
           
           // Optionally auto-fly to the location
-          if (viewer) {
+          if (viewer && !viewer.isDestroyed()) {
             viewer.camera.flyTo({
               destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, 500000),
               duration: 2
@@ -83,7 +116,7 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
 
   // Function to return to default view
   const handleHome = () => {
-    if (viewer) {
+    if (viewer && !viewer.isDestroyed()) {
       viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(-98.5795, 39.8283, 10000000),
         duration: 2
@@ -112,25 +145,29 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
   };
   
   // Helper function to safely create and set terrain provider
-  const safelySetTerrainProvider = (createFn: () => any, fallbackFn: () => Cesium.TerrainProvider) => {
-    if (!viewer) return;
+  const safelySetTerrainProvider = (options: { 
+    requestVertexNormals?: boolean, 
+    requestWaterMask?: boolean 
+  } = {}) => {
+    if (!viewer || viewer.isDestroyed()) return;
     
     try {
-      const terrainProviderResult = createFn();
+      // Try to create the terrain provider
+      const terrainProviderResult = createCompatibleTerrainProvider(options);
       
       // Handle both Promise and direct return safely
       if (isTerrainProviderPromise(terrainProviderResult)) {
         // It's a Promise
         terrainProviderResult
           .then((provider: Cesium.TerrainProvider) => {
-            if (viewer) {
+            if (viewer && !viewer.isDestroyed()) {
               viewer.terrainProvider = provider;
             }
           })
           .catch((error: any) => {
             console.warn('Failed to load terrain provider:', error);
-            if (viewer) {
-              viewer.terrainProvider = fallbackFn();
+            if (viewer && !viewer.isDestroyed()) {
+              viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
             }
           });
       } else {
@@ -139,8 +176,8 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
       }
     } catch (e) {
       console.warn('Error creating terrain provider:', e);
-      if (viewer) {
-        viewer.terrainProvider = fallbackFn();
+      if (viewer && !viewer.isDestroyed()) {
+        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
       }
     }
   };
@@ -237,7 +274,7 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
                 type="checkbox"
                 defaultChecked={true}
                 onChange={(e) => {
-                  if (viewer) {
+                  if (viewer && !viewer.isDestroyed()) {
                     viewer.scene.globe.enableLighting = e.target.checked;
                   }
                 }}
@@ -254,7 +291,7 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
                 type="checkbox"
                 defaultChecked={true}
                 onChange={(e) => {
-                  if (viewer && viewer.scene.skyAtmosphere) {
+                  if (viewer && !viewer.isDestroyed() && viewer.scene.skyAtmosphere) {
                     viewer.scene.skyAtmosphere.show = e.target.checked;
                   }
                 }}
@@ -271,20 +308,13 @@ const GlobeControls: React.FC<GlobeControlsProps> = ({
                 type="checkbox"
                 defaultChecked={true}
                 onChange={(e) => {
-                  if (viewer) {
+                  if (viewer && !viewer.isDestroyed()) {
                     if (e.target.checked) {
                       // Re-enable terrain
-                      safelySetTerrainProvider(
-                        () => {
-                          try {
-                            return Cesium.createWorldTerrain();
-                          } catch (e) {
-                            console.warn('Error creating world terrain:', e);
-                            throw e; // Propagate error to be caught by safelySetTerrainProvider
-                          }
-                        },
-                        () => new Cesium.EllipsoidTerrainProvider()
-                      );
+                      safelySetTerrainProvider({
+                        requestVertexNormals: true,
+                        requestWaterMask: false
+                      });
                     } else {
                       // Disable terrain (flat earth)
                       viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();

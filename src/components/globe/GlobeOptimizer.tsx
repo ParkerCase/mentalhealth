@@ -16,6 +16,39 @@ interface GlobeOptimizerProps {
 }
 
 /**
+ * Helper to create terrain provider with proper fallbacks
+ */
+function createCompatibleTerrainProvider(options: { 
+  requestVertexNormals?: boolean, 
+  requestWaterMask?: boolean 
+} = {}) {
+  try {
+    // Try different ways to access Cesium's terrain provider
+    if (typeof (Cesium as any).createWorldTerrain === 'function') {
+      return (Cesium as any).createWorldTerrain(options);
+    }
+    
+    // Try Cesium Ion if available (newer versions)
+    if (Cesium.Ion && typeof (Cesium.Ion as any).createWorldTerrain === 'function') {
+      return (Cesium.Ion as any).createWorldTerrain(options);
+    }
+    
+    // Check for CesiumTerrainProvider (older versions)
+    if (Cesium.CesiumTerrainProvider) {
+      return new Cesium.CesiumTerrainProvider({
+        url: 'https://assets.agi.com/stk-terrain/world'
+      });
+    }
+    
+    // Final fallback to flat terrain
+    return new Cesium.EllipsoidTerrainProvider();
+  } catch (e) {
+    console.warn('Error creating terrain provider:', e);
+    return new Cesium.EllipsoidTerrainProvider();
+  }
+}
+
+/**
  * Helper to safely handle both Promise and direct return for terrain providers
  */
 function isPromiseLike<T>(obj: any): obj is Promise<T> {
@@ -36,45 +69,42 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
   const { viewer, scene } = useCesium();
 
   // Helper function to handle terrain provider creation safely
-  const createAndSetTerrainProvider = (
-    createFn: () => any,
-    options: { requestVertexNormals?: boolean, requestWaterMask?: boolean } = {}
-  ) => {
+  const createAndSetTerrainProvider = (options: { 
+    requestVertexNormals?: boolean, 
+    requestWaterMask?: boolean 
+  } = {}) => {
     if (!viewer) return;
     
     try {
       // Try to create the terrain provider
-      let terrainProvider;
-      
-      try {
-        terrainProvider = createFn();
-      } catch (e) {
-        console.warn('Error creating terrain provider:', e);
-        terrainProvider = new Cesium.EllipsoidTerrainProvider();
-      }
+      let terrainProvider = createCompatibleTerrainProvider(options);
       
       // Handle both Promise-based and direct return scenarios
       if (isPromiseLike<Cesium.TerrainProvider>(terrainProvider)) {
         // Using Promise.resolve to safely handle the promise
         Promise.resolve(terrainProvider)
           .then((resolvedProvider: Cesium.TerrainProvider) => {
-            if (viewer) {
+            if (viewer && !viewer.isDestroyed()) {
               viewer.terrainProvider = resolvedProvider;
             }
           })
           .catch((error: any) => {
             console.warn('Failed to load terrain provider:', error);
-            if (viewer) {
+            if (viewer && !viewer.isDestroyed()) {
               viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
             }
           });
       } else {
         // Direct assignment for non-Promise return value
-        viewer.terrainProvider = terrainProvider;
+        if (!viewer.isDestroyed()) {
+          viewer.terrainProvider = terrainProvider;
+        }
       }
     } catch (e) {
       console.warn('Failed to set terrain provider:', e);
-      viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+      if (viewer && !viewer.isDestroyed()) {
+        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+      }
     }
   };
 
@@ -83,7 +113,7 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
 
     // Configure the viewer based on performance level
     const configurePerformance = () => {
-      if (!viewer || !scene) return;
+      if (!viewer || !scene || viewer.isDestroyed() || scene.isDestroyed()) return;
       
       // Apply core settings that are safe across versions
       try {
@@ -130,7 +160,11 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           scene.globe.maximumScreenSpaceError = 4;
           
           // Use simple terrain
-          viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+          try {
+            viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+          } catch (e) {
+            console.warn('Error setting terrain provider:', e);
+          }
           break;
           
         case 'medium':
@@ -152,13 +186,10 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           
           // Use terrain with moderate detail if available
           if (dynamicTerrain) {
-            createAndSetTerrainProvider(
-              () => Cesium.createWorldTerrain({
-                requestVertexNormals: false,
-                requestWaterMask: false
-              }),
-              { requestVertexNormals: false, requestWaterMask: false }
-            );
+            createAndSetTerrainProvider({ 
+              requestVertexNormals: false, 
+              requestWaterMask: false 
+            });
           }
           break;
           
@@ -190,13 +221,10 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           }
           
           // Use terrain with high detail
-          createAndSetTerrainProvider(
-            () => Cesium.createWorldTerrain({
-              requestVertexNormals: true,
-              requestWaterMask: false
-            }),
-            { requestVertexNormals: true, requestWaterMask: false }
-          );
+          createAndSetTerrainProvider({ 
+            requestVertexNormals: true,
+            requestWaterMask: false
+          });
           break;
           
         case 'ultra':
@@ -227,13 +255,10 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           }
           
           // Use terrain with maximum detail
-          createAndSetTerrainProvider(
-            () => Cesium.createWorldTerrain({
-              requestVertexNormals: true,
-              requestWaterMask: true
-            }),
-            { requestVertexNormals: true, requestWaterMask: true }
-          );
+          createAndSetTerrainProvider({ 
+            requestVertexNormals: true,
+            requestWaterMask: true
+          });
           break;
       }
       
@@ -281,7 +306,7 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
     // Cleanup
     return () => {
       try {
-        if (scene) {
+        if (scene && !scene.isDestroyed()) {
           scene.preRender.removeEventListener(performanceMonitor);
         }
       } catch (e) {
