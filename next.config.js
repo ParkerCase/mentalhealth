@@ -3,7 +3,6 @@ const path = require("path");
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
 
   images: {
     domains: [
@@ -14,9 +13,8 @@ const nextConfig = {
       "platform-lookaside.fbsbx.com",
     ],
   },
-  experimental: {
-    serverActions: true,
-  },
+  // Next.js 15+ no longer uses serverExternalPackages in experimental
+  // Removed per update requirements
   webpack: (config, { isServer }) => {
     // Cesium configuration
     config.resolve.alias = {

@@ -52,7 +52,7 @@ export default function ConversationList() {
         // Group messages by conversation
         const conversationsMap = new Map()
         
-        messages?.forEach(message => {
+        messages?.forEach((message: any) => {
           const isUserSender = message.sender_id === userId
           const otherUserId = isUserSender ? message.recipient_id : message.sender_id
           const otherUser = isUserSender ? message.recipient : message.sender

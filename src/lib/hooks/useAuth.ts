@@ -39,7 +39,7 @@ export function useAuth() {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: any, session: Session | null) => {
         if (session) {
           setUser(session.user)
           // Fetch user profile

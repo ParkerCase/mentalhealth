@@ -162,7 +162,7 @@ export default function ConversationPage() {
       if (error) throw error
       
       // Process the data to match our MessageWithProfile type
-      const typedMessages: MessageWithProfile[] = (data || []).map(msg => {
+      const typedMessages: MessageWithProfile[] = (data || []).map((msg: any) => {
         // Convert profiles data to the correct type
         let profiles;
         if (msg.profiles) {

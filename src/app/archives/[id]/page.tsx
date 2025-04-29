@@ -88,7 +88,7 @@ export default function ArticlePage() {
           .limit(3)
 
         // Process related articles
-        const processedRelated = relatedData?.map(item => ({
+        const processedRelated = relatedData?.map((item: any) => ({
           ...item,
           profiles: undefined // No profiles needed for the related articles preview
         })) as Article[]

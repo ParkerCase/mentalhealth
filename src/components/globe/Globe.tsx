@@ -12,30 +12,54 @@ interface GlobeComponentProps {
   height?: string;
   width?: string;
   groups?: any[];
+  onGroupSelect?: (group: any) => void;
+  selectedGroupId?: string;
+  initialCoordinates?: { lat: number; lng: number };
 }
 
 export const GlobeComponent: React.FC<GlobeComponentProps> = ({ 
   height = '100vh', 
   width = '100%', 
-  groups = [] 
+  groups = [],
+  onGroupSelect,
+  selectedGroupId,
+  initialCoordinates
 }) => {
   const [imageryProvider, setImageryProvider] = useState<Cesium.ImageryProvider | null>(null);
-  const [terrainProvider, setTerrainProvider] = useState<Cesium.TerrainProvider | null>(null);
+  const [terrainProvider, setTerrainProvider] = useState<any>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const loadCesiumAssets = useCallback(async () => {
     try {
-      // Use createWorldImagery and createWorldTerrain (non-async versions)
-      const imagery = await Cesium.createWorldImagery();
-      const terrain = await Cesium.createWorldTerrain();
+      // Use a simple URL template imagery provider as fallback
+      const imagery = new Cesium.UrlTemplateImageryProvider({
+        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+      });
       
+      // For terrain, use a simple EllipsoidTerrainProvider as Terrain is not available
+      const terrain = new Cesium.EllipsoidTerrainProvider();
+  
       setImageryProvider(imagery);
       setTerrainProvider(terrain);
+      setIsLoaded(true);
     } catch (error) {
       console.error('Error loading Cesium assets:', error);
       setLoadingError('Failed to load globe visualization');
+  
+      // Fallback to basic imagery if we can't load the high-quality assets
+      try {
+        const fallbackImagery = new Cesium.UrlTemplateImageryProvider({
+          url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+        });
+        setImageryProvider(fallbackImagery);
+        setIsLoaded(true);
+      } catch (e) {
+        console.error('Failed to load fallback imagery:', e);
+      }
     }
   }, []);
+  
 
   useEffect(() => {
     loadCesiumAssets();
@@ -50,7 +74,7 @@ export const GlobeComponent: React.FC<GlobeComponentProps> = ({
     );
   }
 
-  if (!imageryProvider || !terrainProvider) {
+  if (!isLoaded) {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <div className="animate-pulse text-gray-400 tracking-widest text-xs uppercase">
@@ -73,16 +97,53 @@ export const GlobeComponent: React.FC<GlobeComponentProps> = ({
       terrainProvider={terrainProvider}
       style={{ height, width }}
     >
-      <ImageryLayer
-        imageryProvider={new Cesium.UrlTemplateImageryProvider({
-          url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-        })}
-      />
+      {imageryProvider && (
+        <ImageryLayer imageryProvider={imageryProvider} />
+      )}
 
       <Globe
         enableLighting={true}
         showGroundAtmosphere={true}
       />
+      
+      {/* Add your group entities here */}
+      {groups && groups.length > 0 && groups.map((group, index) => {
+        // Generate positions for the groups (similar to your original code)
+        const longitude = -98.5795 + (Math.random() - 0.5) * 40;
+        const latitude = 39.8283 + (Math.random() - 0.5) * 30;
+        
+        return (
+          <Entity 
+            key={group.id || index}
+            position={Cesium.Cartesian3.fromDegrees(longitude, latitude)}
+            point={{
+              pixelSize: 12,
+              color: selectedGroupId === group.id 
+                ? Cesium.Color.BLUE 
+                : Cesium.Color.RED,
+              outlineColor: Cesium.Color.WHITE,
+              outlineWidth: 2
+            }}
+            onClick={() => onGroupSelect && onGroupSelect(group)}
+          />
+        );
+      })}
+      
+      {/* Add user location if provided */}
+      {initialCoordinates && (
+        <Entity
+          position={Cesium.Cartesian3.fromDegrees(
+            initialCoordinates.lng, 
+            initialCoordinates.lat
+          )}
+          point={{
+            pixelSize: 16,
+            color: Cesium.Color.BLUE,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 3
+          }}
+        />
+      )}
     </Viewer>
   );
 };

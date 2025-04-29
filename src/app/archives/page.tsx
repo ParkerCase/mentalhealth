@@ -51,7 +51,7 @@ export default function Archives() {
       if (error) throw error
 
       // Process data to match our Article type
-      const processedData = data?.map(item => ({
+      const processedData = data?.map((item: any) => ({
         ...item,
         // Convert profiles array to single object if needed
         profiles: item.profiles && Array.isArray(item.profiles) && item.profiles.length > 0

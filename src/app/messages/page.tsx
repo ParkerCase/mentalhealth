@@ -88,24 +88,24 @@ export default function MessagesPage() {
       if (error) throw error
       
       // Process data to include the latest message
-      const processedConversations = data.map(conversation => {
+      const processedConversations = data.map((conversation: any) => {
         // Sort messages by creation date (newest first)
         const sortedMessages = conversation.messages.sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
         
         return {
           ...conversation,
           latestMessage: sortedMessages[0] || null,
           unreadCount: sortedMessages.filter(
-            msg => !msg.read && msg.sender_id !== user.id
+            (msg: any) => !msg.read && msg.sender_id !== user.id
           ).length
         }
       })
       
       // Process to ensure it matches our type definition exactly
-      const typedConversations: ConversationWithMessagesAndGroup[] = processedConversations.map(conv => {
-        const typedMessages: MessageWithProfile[] = conv.messages.map(msg => ({
+      const typedConversations: ConversationWithMessagesAndGroup[] = processedConversations.map((conv: any) => {
+        const typedMessages: MessageWithProfile[] = conv.messages.map((msg: any) => ({
           id: String(msg.id),
           content: String(msg.content),
           created_at: String(msg.created_at),

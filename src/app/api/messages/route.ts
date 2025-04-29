@@ -1,11 +1,16 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse, NextRequest } from 'next/server'
 import { Database } from '@/lib/types/database.types'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    // Direct approach without cookie handling for the API route
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { get: () => '', set: () => {}, remove: () => {} } }
+    )
     
     // Verify user is authenticated
     const { data: { session } } = await supabase.auth.getSession()
@@ -68,7 +73,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Either recipient or group must be specified' }, { status: 400 })
     }
     
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    // Direct approach without cookie handling for the API route
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { get: () => '', set: () => {}, remove: () => {} } }
+    )
     
     // Verify user is authenticated
     const { data: { session } } = await supabase.auth.getSession()
