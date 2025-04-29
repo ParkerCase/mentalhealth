@@ -1,33 +1,72 @@
-import { useEffect } from 'react';
-import { Viewer as CesiumViewer, Cartesian3, Color, SunLight as CesiumSunLight } from 'cesium';
-import { useCesium } from 'resium';
+'use client';
 
-const SunLight = () => {
-  const { viewer } = useCesium();
+import { useEffect } from 'react';
+import { useCesium } from 'resium';
+import * as Cesium from 'cesium';
+
+/**
+ * SunLight component enhances the globe with realistic sun lighting
+ * and ensures proper day/night cycles
+ */
+const SunLight: React.FC = () => {
+  const { viewer, scene } = useCesium();
 
   useEffect(() => {
-    if (!viewer) return;
+    if (!viewer || !scene) return;
 
-    const scene = viewer.scene;
-    scene.light = new CesiumSunLight();
+    // Set the scene's light to use the sun as the light source
+    if (Cesium.SunLight) {
+      scene.light = new Cesium.SunLight();
+    }
+    
+    // Make sure lighting is enabled on the globe
     scene.globe.enableLighting = true;
 
-    // Add null checks for skyAtmosphere
+    // Set up atmosphere for more realistic visuals
     if (scene.skyAtmosphere) {
       scene.skyAtmosphere.show = true;
-      scene.skyAtmosphere.hueShift = -0.8;
-      scene.skyAtmosphere.saturationShift = 0.2;
-      scene.skyAtmosphere.brightnessShift = 0.4;
+      scene.skyAtmosphere.hueShift = 0.0;
+      scene.skyAtmosphere.saturationShift = 0.1;
+      scene.skyAtmosphere.brightnessShift = 0.1;
     }
 
-    scene.backgroundColor = Color.BLACK;
+    // Ensure the scene has the proper space background
+    scene.backgroundColor = Cesium.Color.BLACK;
 
-    // Add null check for fxaa
-    if (viewer.scene.postProcessStages?.fxaa) {
-      viewer.scene.postProcessStages.fxaa.enabled = true;
+    // Show the sun in the scene
+    if (scene.sun) {
+      scene.sun.show = true;
     }
-  }, [viewer]);
 
+    // Show stars in the skybox
+    if (scene.skyBox) {
+      scene.skyBox.show = true;
+    }
+
+    // Improve rendering quality with anti-aliasing
+    if (scene.postProcessStages?.fxaa) {
+      scene.postProcessStages.fxaa.enabled = true;
+    }
+
+    // Set the clock to current time for proper sun positioning
+    viewer.clock.currentTime = Cesium.JulianDate.fromDate(new Date());
+    
+    // Set the clock to use the current time and continue advancing
+    viewer.clock.shouldAnimate = true;
+    
+    // Configure shadow maps for better visuals if available
+    if (viewer.shadowMap) {
+      viewer.shadowMap.enabled = true;
+      viewer.shadowMap.softShadows = true;
+    }
+    
+    // Return cleanup function
+    return () => {
+      // No specific cleanup needed as viewer will handle this
+    };
+  }, [viewer, scene]);
+
+  // This component doesn't render anything directly
   return null;
 };
 

@@ -57,27 +57,11 @@ const CameraController: React.FC<CameraControllerProps> = ({
           : flyToProps.destination;
 
       if (destination) {
-        try {
-          // Create required orientation object
-          let orientation: any = undefined;
-          
-          if (flyToProps.orientation) {
-            // Make sure all required properties are defined
-            orientation = {
-              heading: flyToProps.orientation.heading ?? 0,
-              pitch: flyToProps.orientation.pitch ?? 0,
-              roll: flyToProps.orientation.roll ?? 0
-            };
-          }
-          
-          camera.flyTo({
-            destination,
-            orientation, 
-            duration: flyToProps.duration || 2
-          });
-        } catch (e) {
-          console.warn('Error in camera flyTo:', e);
-        }
+        camera.flyTo({
+          destination,
+          orientation: flyToProps.orientation,
+          duration: flyToProps.duration || 2
+        });
       }
     } 
     else if (mode === 'lookAt' && lookAt) {
@@ -90,39 +74,17 @@ const CameraController: React.FC<CameraControllerProps> = ({
             )
           : lookAt.target;
 
-      try {
-        // Handle different offset formats
-        let headingPitchRange: Cesium.HeadingPitchRange | undefined = undefined;
-        
-        if (lookAt.offset) {
-          if (Array.isArray(lookAt.offset)) {
-            headingPitchRange = new Cesium.HeadingPitchRange(
+      const offset = 
+        Array.isArray(lookAt.offset) 
+          ? new Cesium.HeadingPitchRange(
               Cesium.Math.toRadians(lookAt.offset[0]),
               Cesium.Math.toRadians(lookAt.offset[1]),
               lookAt.offset[2]
-            );
-          } else {
-            // Already a Cartesian3, need to convert to HeadingPitchRange
-            // This is a simplification; a proper implementation would need
-            // to calculate heading, pitch, and range
-            headingPitchRange = new Cesium.HeadingPitchRange(
-              0,
-              -Math.PI/4,
-              Cesium.Cartesian3.magnitude(lookAt.offset)
-            );
-          }
-        }
+            )
+          : undefined;
 
-        if (target) {
-          if (headingPitchRange) {
-            camera.lookAt(target, headingPitchRange);
-          } else {
-            // If no offset is provided, just look at the target from current position
-            camera.lookAt(target);
-          }
-        }
-      } catch (e) {
-        console.warn('Error in camera lookAt:', e);
+      if (target) {
+        camera.lookAt(target, offset);
       }
     }
     else if (mode === 'rotate') {
@@ -158,19 +120,15 @@ const CameraController: React.FC<CameraControllerProps> = ({
             new Cesium.Cartesian3()
           );
           
-          // Update camera with required orientation properties
-          try {
-            camera.setView({
-              destination: cameraPosition,
-              orientation: {
-                heading: heading + Math.PI,
-                pitch: -Cesium.Math.toRadians(30),
-                roll: 0
-              }
-            });
-          } catch (e) {
-            console.warn('Error updating camera view:', e);
-          }
+          // Update camera
+          camera.setView({
+            destination: cameraPosition,
+            orientation: {
+              heading: heading + Math.PI,
+              pitch: -Cesium.Math.toRadians(30),
+              roll: 0
+            }
+          });
           
           // Continue animation
           rotationRef.current = requestAnimationFrame(rotate);
