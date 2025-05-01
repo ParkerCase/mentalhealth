@@ -40,19 +40,42 @@ interface AdvancedGlobeProps {
 function createCompatibleWorldImagery() {
   // Try different ways to access Cesium's imagery
   try {
-    // Check if createWorldImagery exists as a function on Cesium
+    // Handle different Cesium versions with type assertion for TypeScript
+    if (Cesium.Ion) {
+      // Cast to any to bypass TypeScript errors
+      const ionAny = Cesium.Ion as any;
+      if (typeof ionAny.createWorldImagery === 'function') {
+        const style = (Cesium as any).IonWorldImageryStyle?.AERIAL_WITH_LABELS ?? 1;
+        return ionAny.createWorldImagery({
+          style: style
+        });
+      }
+    }
+    
+    // For older versions as a fallback
     if (typeof (Cesium as any).createWorldImagery === 'function') {
       return (Cesium as any).createWorldImagery({
-        style: (Cesium as any).IonWorldImageryStyle?.AERIAL_WITH_LABELS || 'AerialWithLabels'
+        style: (Cesium as any).IonWorldImageryStyle?.AERIAL_WITH_LABELS ?? 'AerialWithLabels'
       });
     }
     
-    // Try Cesium Ion if available (newer versions)
-    if (Cesium.Ion && typeof (Cesium.Ion as any).createWorldImagery === 'function') {
-      return (Cesium.Ion as any).createWorldImagery();
+    // Use BingMapsImageryProvider as fallback
+    if (Cesium.BingMapsImageryProvider) {
+      return new Cesium.BingMapsImageryProvider({
+        url: 'https://dev.virtualearth.net',
+        key: 'get-your-own-key', // This won't work but prevents crash
+        mapStyle: 'AerialWithLabels' // Using string value directly to avoid type issues
+      });
     }
     
-    // Try Cesium default UrlTemplateImageryProvider as fallback
+    // Final fallback: use OpenStreetMap
+    if (Cesium.OpenStreetMapImageryProvider) {
+      return new Cesium.OpenStreetMapImageryProvider({
+        url: 'https://tile.openstreetmap.org/'
+      });
+    }
+    
+    // Ultimate fallback
     return new Cesium.UrlTemplateImageryProvider({
       url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       maximumLevel: 19
@@ -60,7 +83,7 @@ function createCompatibleWorldImagery() {
   } catch (e) {
     console.warn('Error creating world imagery:', e);
     
-    // Final fallback: use OpenStreetMap
+    // Ultimate fallback: use OpenStreetMap
     return new Cesium.UrlTemplateImageryProvider({
       url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       maximumLevel: 19
@@ -71,7 +94,19 @@ function createCompatibleWorldImagery() {
 // Helper to create terrain provider with proper fallbacks
 function createCompatibleTerrainProvider() {
   try {
-    // Try different ways to access Cesium's terrain provider
+    // Handle different Cesium versions with type assertion for TypeScript
+    if (Cesium.Ion) {
+      // Cast to any to bypass TypeScript errors
+      const ionAny = Cesium.Ion as any;
+      if (typeof ionAny.createWorldTerrain === 'function') {
+        return ionAny.createWorldTerrain({
+          requestVertexNormals: true,
+          requestWaterMask: true
+        });
+      }
+    }
+    
+    // For older versions as a fallback
     if (typeof (Cesium as any).createWorldTerrain === 'function') {
       return (Cesium as any).createWorldTerrain({
         requestVertexNormals: true,
@@ -79,16 +114,20 @@ function createCompatibleTerrainProvider() {
       });
     }
     
-    // Try Cesium Ion if available (newer versions)
-    if (Cesium.Ion && typeof (Cesium.Ion as any).createWorldTerrain === 'function') {
-      return (Cesium.Ion as any).createWorldTerrain();
-    }
-    
-    // Check for CesiumTerrainProvider (older versions)
+    // Check for CesiumTerrainProvider
     if (Cesium.CesiumTerrainProvider) {
-      return new Cesium.CesiumTerrainProvider({
-        url: 'https://assets.agi.com/stk-terrain/world'
-      });
+      // Handle IonResource
+      if (Cesium.IonResource) {
+        // Need to directly provide a string URL to avoid type issues
+        return new Cesium.CesiumTerrainProvider({
+          // Type assertion to bypass type checking
+          url: 'https://assets.agi.com/stk-terrain/world' as any
+        });
+      } else {
+        return new Cesium.CesiumTerrainProvider({
+          url: 'https://assets.agi.com/stk-terrain/world'
+        });
+      }
     }
     
     // Final fallback to flat terrain

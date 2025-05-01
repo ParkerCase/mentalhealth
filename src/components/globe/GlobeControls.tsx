@@ -19,21 +19,33 @@ function createCompatibleTerrainProvider(options: {
   requestWaterMask?: boolean 
 } = {}) {
   try {
-    // Try different ways to access Cesium's terrain provider
+    // Handle different Cesium versions with type assertion for TypeScript
+    if (Cesium.Ion) {
+      // Cast to any to bypass TypeScript errors
+      const ionAny = Cesium.Ion as any;
+      if (typeof ionAny.createWorldTerrain === 'function') {
+        return ionAny.createWorldTerrain(options);
+      }
+    }
+    
+    // For older versions as a fallback
     if (typeof (Cesium as any).createWorldTerrain === 'function') {
       return (Cesium as any).createWorldTerrain(options);
     }
     
-    // Try Cesium Ion if available (newer versions)
-    if (Cesium.Ion && typeof (Cesium.Ion as any).createWorldTerrain === 'function') {
-      return (Cesium.Ion as any).createWorldTerrain(options);
-    }
-    
-    // Check for CesiumTerrainProvider (older versions)
+    // Check for CesiumTerrainProvider
     if (Cesium.CesiumTerrainProvider) {
-      return new Cesium.CesiumTerrainProvider({
-        url: 'https://assets.agi.com/stk-terrain/world'
-      });
+      // Handle different ways to set the URL
+      if (Cesium.IonResource) {
+        // Type assertion to bypass TypeScript type checking
+        return new Cesium.CesiumTerrainProvider({
+          url: 'https://assets.agi.com/stk-terrain/world' as any
+        });
+      } else {
+        return new Cesium.CesiumTerrainProvider({
+          url: 'https://assets.agi.com/stk-terrain/world'
+        });
+      }
     }
     
     // Final fallback to flat terrain
@@ -48,7 +60,7 @@ function createCompatibleTerrainProvider(options: {
  * Helper to safely handle promises for terrain providers
  */
 function isTerrainProviderPromise(value: any): value is Promise<Cesium.TerrainProvider> {
-  return value && typeof value === 'object' && typeof value.then === 'function';
+  return !!value && (typeof value === 'object' || typeof value === 'function') && typeof value.then === 'function';
 }
 
 /**

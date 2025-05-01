@@ -18,8 +18,8 @@ declare global {
   }
 }
 
-// Fixed: Explicitly define WeatherType to include 'clear'
-type WeatherType = 'clouds' | 'storm' | 'fog' | 'clear';
+// Define WeatherType to explicitly include 'clear'
+type WeatherType = 'clear' | 'clouds' | 'storm' | 'fog';
 
 interface WeatherEffectsProps {
   type?: WeatherType;
@@ -101,7 +101,7 @@ const WeatherEffects: React.FC<WeatherEffectsProps> = ({
     
     // Set up simple atmosphere effects if Cesium version doesn't support ParticleSystem
     try {
-      if (!Cesium.ParticleSystem) {
+      if (!(Cesium as any).ParticleSystem) {
         // Fallback to simple atmosphere adjustments
         if (scene.skyAtmosphere) {
           // Create a lightning flash effect for storms
@@ -128,8 +128,8 @@ const WeatherEffects: React.FC<WeatherEffectsProps> = ({
         return;
       }
       
-      // Fixed: Now type comparison works correctly with the updated WeatherType
-      if (type !== 'clear' && Cesium.ParticleSystem) {
+      // Now type comparison works correctly since we've explicitly defined WeatherType
+      if (type !== 'clear' && (Cesium as any).ParticleSystem) {
         try {
           const defaultPosition = Cesium.Cartesian3.fromDegrees(
             location?.lng ?? -95, 
@@ -138,7 +138,7 @@ const WeatherEffects: React.FC<WeatherEffectsProps> = ({
           );
           
           // Configure a simplified particle system
-          particleSystemRef.current = new Cesium.ParticleSystem({
+          particleSystemRef.current = new (Cesium as any).ParticleSystem({
             image: '/assets/cloud.png',
             startScale: 1.0,
             endScale: 1.5,
@@ -149,7 +149,7 @@ const WeatherEffects: React.FC<WeatherEffectsProps> = ({
             imageSize: new Cesium.Cartesian2(100, 100),
             emissionRate: 5 * intensity,
             lifetime: 16.0,
-            emitter: new Cesium.CircleEmitter(location?.radius ? location.radius * 500 : 400000),
+            emitter: new (Cesium as any).CircleEmitter(location?.radius ? location.radius * 500 : 400000),
             modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(defaultPosition),
             startColor: new Cesium.Color(0.8, 0.8, 0.8, 0.3 * intensity),
             endColor: new Cesium.Color(0.8, 0.8, 0.8, 0.0)
