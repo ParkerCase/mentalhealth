@@ -1,27 +1,27 @@
-// src/app/api/auth/register/page.tsx
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import Link from 'next/link'
-import RegisterForm from '@/components/auth/RegisterForm'
+import AuthUI from '@/components/auth/AuthUI'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loading, initialize } = useAuthStore()
-
+  
   useEffect(() => {
     initialize()
   }, [initialize])
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/profile')
+      // Check if there's a redirect URL in the query parameters
+      const redirect = searchParams?.get('redirectUrl')
+      router.push(redirect || '/profile')
     }
-  }, [user, loading, router])
-
-  // Form handling is now in the RegisterForm component
+  }, [user, loading, router, searchParams])
 
   if (loading) {
     return (
@@ -54,7 +54,10 @@ export default function RegisterPage() {
           </div>
 
           <div className="mt-8">
-            <RegisterForm />
+            <AuthUI 
+              view="sign_up" 
+              redirectTo="/profile"
+            />
           </div>
         </div>
       </div>

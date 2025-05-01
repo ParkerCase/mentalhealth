@@ -1,13 +1,11 @@
 // src/lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { Database } from '../types/database.types'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
+// For server components, we'll use a simpler client without cookies
+// This avoids all the cookie handling issues in server components
 export const createClient = () => {
-  // In Next.js 15, just use basic client without cookies for server components
-  return createServerClient(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: () => '', set: () => {}, remove: () => {} } }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }

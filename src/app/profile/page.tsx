@@ -1,4 +1,3 @@
-// src/app/profile/page.tsx
 'use client'
 
 import { useState, useEffect, ChangeEvent, FormEvent } from 'react'
@@ -7,7 +6,6 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { FaUser, FaCamera, FaSignOutAlt, FaEdit } from 'react-icons/fa'
-import { Profile } from '@/lib/types'
 
 interface ProfileFormData {
   username: string;
@@ -18,7 +16,7 @@ interface ProfileFormData {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, profile, loading, initialize, signOut } = useAuthStore()
+  const { user, profile, loading, initialize, refreshProfile, signOut } = useAuthStore()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState<ProfileFormData>({
     username: '',
@@ -100,17 +98,35 @@ export default function ProfilePage() {
       let avatar_url = profile?.avatar_url || null
       
       if (avatarFile) {
+        // Create 'avatars' bucket if it doesn't exist
+        try {
+          // Check if bucket exists first
+          const { error: getBucketError } = await supabase.storage.getBucket('avatars')
+
+          if (getBucketError) {
+            // Create the bucket if it doesn't exist
+            await supabase.storage.createBucket('avatars', {
+              public: true
+            })
+          }
+        } catch (err) {
+          console.error('Error with bucket:', err)
+          // Continue anyway, it might already exist
+        }
+        
+        // Upload the avatar
         const fileExt = avatarFile.name.split('.').pop()
-        const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`
+        const filePath = `${user.id}-${Date.now()}.${fileExt}`
         
         const { error: uploadError } = await supabase.storage
-          .from('profiles')
+          .from('avatars')
           .upload(filePath, avatarFile)
         
         if (uploadError) throw uploadError
         
+        // Get the public URL
         const { data: publicUrlData } = supabase.storage
-          .from('profiles')
+          .from('avatars')
           .getPublicUrl(filePath)
         
         avatar_url = publicUrlData.publicUrl
@@ -135,7 +151,7 @@ export default function ProfilePage() {
       setIsEditing(false)
       
       // Refresh auth store profile data
-      initialize()
+      refreshProfile()
     } catch (err) {
       console.error('Error updating profile:', err)
       setError(err instanceof Error ? err.message : 'There was an error updating your profile')

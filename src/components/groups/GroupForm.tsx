@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, ChangeEvent, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/lib/stores/authStore'
 import { GroupFormData } from '@/lib/types'
+import { geocodeAddress } from '@/lib/utils/geocodingService'
 
 interface GroupFormProps {
   onSuccess?: () => void
@@ -11,6 +13,7 @@ interface GroupFormProps {
 
 export default function GroupForm({ onSuccess }: GroupFormProps) {
   const router = useRouter()
+  const { user } = useAuthStore()
   const supabase = createClient()
   const [formData, setFormData] = useState<GroupFormData>({
     name: '',
@@ -28,7 +31,7 @@ export default function GroupForm({ onSuccess }: GroupFormProps) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData({
       ...formData,
@@ -36,37 +39,72 @@ export default function GroupForm({ onSuccess }: GroupFormProps) {
     })
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError('')
 
     try {
-      // Get user session
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session?.user) {
+      if (!user) {
         throw new Error('You must be logged in to register a group')
       }
 
-      // Register the group
-      const response = await fetch('/api/groups/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          userId: session.user.id
-        }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to register group')
+      // Try to geocode the address
+      let geoLocation = null
+      if (formData.address && formData.city && formData.state) {
+        try {
+          const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zip}`
+          const results = await geocodeAddress(fullAddress)
+          
+          if (results && results.length > 0) {
+            const { lng, lat } = results[0]
+            geoLocation = {
+              type: 'Point',
+              coordinates: [lng, lat]
+            }
+          }
+        } catch (geoError) {
+          console.error('Geocoding error:', geoError)
+          // Continue without geocoding
+        }
       }
 
+      // Insert the group
+      const { data, error: insertError } = await supabase
+        .from('groups')
+        .insert({
+          name: formData.name,
+          description: formData.description,
+          location: formData.location,
+          geo_location: geoLocation,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zip: formData.zip,
+          website: formData.website,
+          email: formData.email,
+          phone: formData.phone,
+          approved: false // Requires admin approval
+        })
+        .select()
+      
+      if (insertError) throw insertError
+
       setSuccess(true)
+      
+      // Reset form
+      setFormData({
+        name: '',
+        description: '',
+        location: '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        website: '',
+        email: '',
+        phone: '',
+      })
       
       if (onSuccess) {
         onSuccess()
@@ -117,7 +155,7 @@ export default function GroupForm({ onSuccess }: GroupFormProps) {
                     website: '',
                     email: '',
                     phone: '',
-                  } as GroupFormData)
+                  })
                 }}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
               >

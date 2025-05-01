@@ -1,16 +1,19 @@
 // src/lib/stores/authStore.ts
 import { create } from 'zustand'
 import { createClient } from '../supabase/client'
+import { User } from '@supabase/supabase-js'
+import { Profile } from '../types'
 
 interface AuthState {
-  user: any | null
-  profile: any | null
+  user: User | null
+  profile: Profile | null
   loading: boolean
   initialized: boolean
+  initialize: () => Promise<void>
   signIn: (credentials: { email: string; password: string }) => Promise<{data: any, error: any}>
   signUp: (credentials: { email: string; password: string; username: string }) => Promise<{data: any, error: any}>
   signOut: () => Promise<{error: any}>
-  initialize: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -19,20 +22,82 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: true,
   initialized: false,
   
-  signIn: async ({ email, password }) => {
+  initialize: async () => {
+    if (get().initialized) return
+    
     const supabase = createClient()
-    const result = await supabase.auth.signInWithPassword({ email, password })
-    if (result.data.user) {
-      set({ user: result.data.user })
-      // Fetch profile
+    set({ loading: true })
+    
+    try {
+      // Get initial session
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (session?.user) {
+        set({ user: session.user })
+        
+        // Fetch profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        
+        set({ profile })
+      }
+      
+      // Setup auth state change listener
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          set({ user: session?.user || null })
+          
+          if (session?.user) {
+            // Fetch profile
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+            
+            set({ profile })
+          } else {
+            set({ profile: null })
+          }
+        }
+      )
+      
+      // We don't need to return the cleanup function
+      subscription // Just reference to avoid unused variable warning
+    } catch (error) {
+      console.error('Error initializing auth:', error)
+    } finally {
+      set({ loading: false, initialized: true })
+    }
+  },
+  
+  refreshProfile: async () => {
+    const supabase = createClient()
+    const { user } = get()
+    
+    if (!user) return
+    
+    try {
       const { data } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', result.data.user.id)
+        .eq('id', user.id)
         .single()
-      set({ profile: data })
+      
+      if (data) {
+        set({ profile: data })
+      }
+    } catch (error) {
+      console.error('Error refreshing profile:', error)
     }
-    return result
+  },
+  
+  signIn: async ({ email, password }) => {
+    const supabase = createClient()
+    return supabase.auth.signInWithPassword({ email, password })
   },
   
   signUp: async ({ email, password, username }) => {
@@ -50,48 +115,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   
   signOut: async () => {
     const supabase = createClient()
-    const result = await supabase.auth.signOut()
     set({ user: null, profile: null })
-    return result
-  },
-  
-  initialize: async () => {
-    if (get().initialized) return
-    
-    const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (session?.user) {
-      set({ user: session.user })
-      
-      // Fetch profile
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single()
-      
-      set({ profile: data })
-    }
-    
-    set({ loading: false, initialized: true })
-    
-    // Setup auth state change listener
-    supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-      if (session?.user) {
-        set({ user: session.user })
-        
-        // Fetch profile
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-        
-        set({ profile: data })
-      } else {
-        set({ user: null, profile: null })
-      }
-    })
+    return supabase.auth.signOut()
   }
 }))
