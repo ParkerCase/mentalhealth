@@ -5,25 +5,59 @@ import Link from 'next/link'
 import { useAuthStore } from '@/lib/stores/authStore'
 import dynamic from 'next/dynamic'
 
+// Define Cesium base URL for client-side use only
 if (typeof window !== 'undefined') {
-  (window as any).CESIUM_BASE_URL = '/Cesium';
+  (window as any).CESIUM_BASE_URL = '/cesium';
 }
 
+// Sample group data for demonstration
+const exampleGroups = [
+  {
+    id: 'group-1',
+    name: 'New York Support Group',
+    geo_location: {
+      type: 'Point',
+      coordinates: [-74.0060, 40.7128]
+    },
+    city: 'New York',
+    state: 'NY'
+  },
+  {
+    id: 'group-2',
+    name: 'Los Angeles Community',
+    geo_location: {
+      type: 'Point',
+      coordinates: [-118.2437, 34.0522]
+    },
+    city: 'Los Angeles',
+    state: 'CA'
+  },
+  {
+    id: 'group-3',
+    name: 'Chicago Network',
+    geo_location: {
+      type: 'Point',
+      coordinates: [-87.6298, 41.8781]
+    },
+    city: 'Chicago',
+    state: 'IL'
+  }
+];
 
-
-import 'cesium/Build/Cesium/Widgets/widgets.css';
-
-// Dynamically import the Globe component with no SSR
-const GlobeComponent = dynamic(() => import('@/components/globe/index').then(mod => mod.GlobeComponent), { 
-  ssr: false,
-  loading: () => (
-    <div className="h-screen w-full flex items-center justify-center">
-      <div className="animate-pulse text-gray-400 tracking-widest text-xs uppercase">
-        Loading visualization...
+// Dynamically import the globe component with no SSR
+const RealisticGlobe = dynamic(
+  () => import('@/components/globe/RealisticGlobePerformance'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-screen w-full flex items-center justify-center bg-[#292929]">
+        <div className="animate-pulse text-gray-400 tracking-wider text-sm">
+          Loading visualization...
+        </div>
       </div>
-    </div>
-  )
-})
+    )
+  }
+);
 
 // Error boundary component
 function ErrorBoundary({ children }: { children: React.ReactNode }) {
@@ -37,8 +71,11 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
   
   if (hasError) {
     return (
-      <div className="h-screen w-full flex items-center justify-center">
-        <div className="text-gray-400">Unable to load visualization.</div>
+      <div className="h-screen w-full flex items-center justify-center bg-[#292929]">
+        <div className="text-gray-400 p-4 max-w-md text-center">
+          <p className="text-xl mb-2">Unable to load globe visualization</p>
+          <p className="text-sm">Please try a different browser or device.</p>
+        </div>
       </div>
     );
   }
@@ -48,6 +85,8 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
 
 export default function Home() {
   const { initialize } = useAuthStore()
+  const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | undefined>();
 
   useEffect(() => {
     initialize()
@@ -57,7 +96,32 @@ export default function Home() {
     document.body.style.backgroundColor = '#292929';
     document.body.style.color = '#FFFFFF';
     
+    // Try to get user location for better initial experience
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        () => {
+          // Fallback to US center if geolocation fails
+          setUserLocation({
+            lat: 39.8283,
+            lng: -98.5795
+          });
+        }
+      );
+    }
   }, [initialize])
+  
+  // Handle group selection
+  const handleGroupSelect = (group: any) => {
+    setSelectedGroupId(previousId => 
+      previousId === group.id ? undefined : group.id
+    );
+  };
 
   return (
     <main className="min-h-screen bg-[#292929] overflow-hidden">
@@ -68,15 +132,19 @@ export default function Home() {
           <ErrorBoundary>
             <Suspense fallback={
               <div className="h-screen w-full flex items-center justify-center">
-                <div className="animate-pulse text-gray-400 tracking-widest text-xs uppercase">
+                <div className="animate-pulse text-gray-400 tracking-wider text-sm">
                   Loading visualization...
                 </div>
               </div>
             }>
-              <GlobeComponent 
-                groups={[]} 
+              <RealisticGlobe 
                 height="100vh"
                 width="100%"
+                groups={exampleGroups}
+                selectedGroupId={selectedGroupId}
+                onGroupSelect={handleGroupSelect}
+                initialCoordinates={userLocation}
+                autoRotate={!selectedGroupId} // Stop rotation when a group is selected
               />
             </Suspense>
           </ErrorBoundary>
@@ -85,13 +153,32 @@ export default function Home() {
         {/* Gradient overlay for better text visibility */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent z-5"></div>
         
+        {/* Selected group info */}
+        {selectedGroupId && (
+          <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white p-4 rounded z-10 max-w-xs">
+            <h3 className="text-lg font-medium mb-1">
+              {exampleGroups.find(g => g.id === selectedGroupId)?.name}
+            </h3>
+            <p className="text-sm opacity-80">
+              {exampleGroups.find(g => g.id === selectedGroupId)?.city}, 
+              {exampleGroups.find(g => g.id === selectedGroupId)?.state}
+            </p>
+            <button 
+              className="mt-2 bg-blue-600 text-white text-xs px-3 py-1 rounded"
+              onClick={() => setSelectedGroupId(undefined)}
+            >
+              Close
+            </button>
+          </div>
+        )}
+        
         {/* Content overlay */}
         <div className="container relative mx-auto px-6 z-10">
           <div className="max-w-3xl">
             <h1 className="text-7xl font-extralight tracking-tight mb-6">
-              <span className="block opacity-90">creativity</span>
+              <span className="block opacity-90">connection</span>
               <span className="block text-sm uppercase tracking-[0.2em] mt-3 mb-8 font-light">
-                We believe creativity begins with an observation
+                Find your community, wherever you are
               </span>
             </h1>
             
@@ -166,7 +253,7 @@ export default function Home() {
         </div>
       </section>
       
-      {/* Benefits Section */}
+      {/* Benefits Section - Simplified for better performance */}
       <section className="py-20 bg-[#1e1e1e]">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-light text-center mb-16 tracking-wider">Why <span className="font-semibold">Join Us</span></h2>

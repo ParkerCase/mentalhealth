@@ -1,34 +1,30 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Viewer, Entity, ImageryLayer, Globe } from 'resium';
+import React, { useEffect, useRef } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
-// Simple interfaces to reduce type complexity
-interface BasicGroup {
-  id: string;
-  name: string;
-  geo_location?: {
-    coordinates: number[];
-  };
-  city?: string;
-  state?: string;
-}
-
+// Define props interface
 interface RealisticGlobeProps {
   height?: string;
   width?: string;
-  groups?: BasicGroup[];
+  groups?: Array<{
+    id: string;
+    name: string;
+    geo_location?: {
+      type?: string;
+      coordinates: number[];
+    };
+    city?: string;
+    state?: string;
+  }>;
   selectedGroupId?: string;
-  onGroupSelect?: (group: BasicGroup) => void;
+  onGroupSelect?: (group: any) => void;
   initialCoordinates?: { lat: number; lng: number };
   autoRotate?: boolean;
 }
 
-/**
- * Lightweight Cesium globe component optimized for performance
- */
+// Enhanced version with rotation and better visuals
 const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
   height = '100vh',
   width = '100%',
@@ -36,294 +32,274 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
   selectedGroupId,
   onGroupSelect,
   initialCoordinates,
-  autoRotate = false
+  autoRotate = true // Default to true for rotation
 }) => {
-  const [imageryReady, setImageryReady] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
-  const rotationRef = useRef<number | null>(null);
-  const creditContainer = useRef<HTMLDivElement>(document.createElement('div'));
-  
-  // Initialize the viewer
-  const handleViewerMounted = useCallback((viewer: Cesium.Viewer) => {
-    if (!viewer) return;
-    
-    viewerRef.current = viewer;
-    const scene = viewer.scene;
-    const globe = scene.globe;
-    
-    // Critical performance settings
-    globe.show = true;
-    globe.baseColor = Cesium.Color.DARKBLUE; // This helps users see something while waiting
-    
-    // ⚠️ PERFORMANCE: Disable high-cost features
-    scene.fog.enabled = false;
-    scene.skyAtmosphere.show = false;
-    globe.enableLighting = false;
-    
-    // Hide sun and moon - use type-safe approach with optional chaining
-    if (scene.sun) scene.sun.show = false;
-    if (scene.moon) scene.moon.show = false;
-    if (scene.skyBox) scene.skyBox.show = false;
-    
-    scene.backgroundColor = Cesium.Color.BLACK;
-    
-    // ⚠️ PERFORMANCE: Reduce quality for faster loading
-    globe.maximumScreenSpaceError = 4; // Higher value = less detail = better performance
-    
-    // ⚠️ PERFORMANCE: Reduce memory usage
-    (scene as any).globe.tileCacheSize = 50; // Default is 100
-    
-    // ⚠️ PERFORMANCE: Cesium creates hidden elements fast
-    (viewer as any).requestRenderMode = true;
-    (viewer as any).maximumRenderTimeChange = Infinity;
-    
-    // Improve load speed by using 2D mode initially
-    if (scene.mode !== Cesium.SceneMode.SCENE2D) {
-      try {
-        scene.mode = Cesium.SceneMode.SCENE2D;
-        // Schedule transition to 3D after initial load
-        setTimeout(() => {
-          try {
-            scene.mode = Cesium.SceneMode.SCENE3D;
-          } catch (e) {
-            console.warn('Could not switch to 3D mode:', e);
-          }
-        }, 2000);
-      } catch (e) {
-        console.warn('Could not set scene mode:', e);
-      }
-    }
-    
-    // Set camera to initial position with very high altitude
-    if (initialCoordinates) {
-      viewer.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(
-          initialCoordinates.lng,
-          initialCoordinates.lat,
-          20000000 // Start very far out
-        )
-      });
-    }
-    
-    // Configure camera limits to prevent zooming in too much (saves memory)
-    scene.screenSpaceCameraController.minimumZoomDistance = 100000; // 100km min altitude
-    
-    // Force immediate render
-    scene.requestRender();
-    setImageryReady(true);
-    
-    console.log("✅ Viewer configured for optimal performance");
-  }, [initialCoordinates]);
-  
-  // Configure auto-rotation
+  const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
+  const animationRef = useRef<number | null>(null);
+
   useEffect(() => {
-    if (!viewerRef.current || !autoRotate) return;
+    if (!containerRef.current || viewerRef.current) return;
     
-    // Cancel any existing rotation
-    if (rotationRef.current) {
-      cancelAnimationFrame(rotationRef.current);
-      rotationRef.current = null;
-    }
+    console.log("Creating enhanced Cesium viewer...");
     
-    // Setup rotation at high altitude to minimize tile loading
-    const viewer = viewerRef.current;
-    const camera = viewer.camera;
-    
-    const startRotation = () => {
-      if (!viewer || viewer.isDestroyed() || !camera) return;
+    try {
+      // Try to use a default token if none is set
+      if (!Cesium.Ion.defaultAccessToken) {
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3NjRjNGFmNi01Mjk4LTQyMzUtODEyOS02YWE5YjU3MjQ4NjgiLCJpZCI6MTc5MTc5LCJpYXQiOjE2OTg2MDM3NDB9.0M_G9DXhNFZTx2np4vXvECbgG5Lo7OQpRcyBuPjbhmA';
+      }
+
+      // Create viewer with improved configuration
+      const viewer = new Cesium.Viewer(containerRef.current, {
+        animation: false,
+        baseLayerPicker: false,
+        fullscreenButton: false,
+        geocoder: false,
+        homeButton: false,
+        infoBox: false,
+        sceneModePicker: false,
+        selectionIndicator: false,
+        timeline: false,
+        navigationHelpButton: false,
+        // Use the offline imagery provider
+        imageryProvider: new Cesium.TileMapServiceImageryProvider({
+          url: Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
+        }),
+        creditContainer: document.createElement('div')
+      });
       
-      // Get current heading or start at 0
-      let heading = camera.heading || 0;
+      viewerRef.current = viewer;
       
-      // Simple rotation loop
-      const rotate = () => {
-        if (!viewer || viewer.isDestroyed() || !camera) return;
+      // Enable atmosphere and lighting for more realistic appearance
+      viewer.scene.globe.enableLighting = true;
+      
+      if (viewer.scene.skyAtmosphere) {
+        viewer.scene.skyAtmosphere.show = true;
+        // Make the atmosphere more visible
+        viewer.scene.skyAtmosphere.hueShift = 0.0;
+        viewer.scene.skyAtmosphere.saturationShift = 0.1;
+        viewer.scene.skyAtmosphere.brightnessShift = 0.1;
+      }
+      
+      // Show the sun for better lighting
+      if (viewer.scene.sun) {
+        viewer.scene.sun.show = true;
+      }
+
+      // Add stars in the background
+      if (viewer.scene.skyBox) {
+        viewer.scene.skyBox.show = true;
+      }
+      
+      // Set camera to view the whole Earth initially
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          initialCoordinates?.lng || -98.5795,
+          initialCoordinates?.lat || 39.8283,
+          initialCoordinates ? 5000000 : 15000000 // Closer if we have coordinates
+        ),
+        duration: 0
+      });
+      
+      // Ensure we can't zoom in too close
+      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000000; // 1000km
+      
+      // Add markers for each group
+      groups.forEach(group => {
+        if (!group.geo_location?.coordinates || group.geo_location.coordinates.length < 2) return;
         
-        // Increment heading slowly (less frequent updates = better performance)
-        heading += Cesium.Math.toRadians(0.1);
+        const lng = group.geo_location.coordinates[0];
+        const lat = group.geo_location.coordinates[1];
+        const isSelected = selectedGroupId === group.id;
         
-        // Position camera at high altitude to reduce tile loads
-        const center = Cesium.Cartesian3.fromDegrees(0, 0);
-        const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        // Create pulse effect entities
+        const glowSize = isSelected ? 125000 : 75000; // Size in meters
         
-        const position = new Cesium.Cartesian3(
-          15000000 * Math.cos(heading),
-          15000000 * Math.sin(heading),
-          5000000
-        );
-        
-        const cameraPosition = Cesium.Matrix4.multiplyByPoint(
-          transform,
-          position,
-          new Cesium.Cartesian3()
-        );
-        
-        // Update camera with tilt
-        camera.setView({
-          destination: cameraPosition,
-          orientation: {
-            heading: heading + Math.PI,
-            pitch: Cesium.Math.toRadians(-30),
-            roll: 0
+        // Add a glowing circle for each marker
+        viewer.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(lng, lat, 0),
+          ellipse: {
+            semiMinorAxis: glowSize,
+            semiMajorAxis: glowSize,
+            height: 0,
+            material: new Cesium.ColorMaterialProperty(
+              isSelected 
+                ? Cesium.Color.YELLOW.withAlpha(0.3) 
+                : Cesium.Color.CYAN.withAlpha(0.3)
+            ),
+            outline: true,
+            outlineColor: isSelected ? Cesium.Color.YELLOW.withAlpha(0.7) : Cesium.Color.CYAN.withAlpha(0.7),
+            outlineWidth: 3
           }
         });
         
-        // Continue animation with throttled framerate (lower is better for performance)
-        setTimeout(() => {
-          rotationRef.current = requestAnimationFrame(rotate);
-        }, 100); // Only update camera position 10 times per second
-      };
-      
-      // Start rotation
-      rotationRef.current = requestAnimationFrame(rotate);
-    };
-    
-    // Start rotation after a delay to let initial load complete
-    const rotationTimer = setTimeout(() => {
-      startRotation();
-    }, 2000);
-    
-    // Cleanup function
-    return () => {
-      clearTimeout(rotationTimer);
-      if (rotationRef.current) {
-        cancelAnimationFrame(rotationRef.current);
-        rotationRef.current = null;
-      }
-    };
-  }, [autoRotate]);
-  
-  // Cleanup on unmount
-  useEffect(() => {
-    // Create a stable credit container
-    creditContainer.current.style.display = 'none';
-    document.body.appendChild(creditContainer.current);
-    
-    // Ensure proper cleanup
-    return () => {
-      if (rotationRef.current) {
-        cancelAnimationFrame(rotationRef.current);
-        rotationRef.current = null;
-      }
-      
-      if (viewerRef.current && !viewerRef.current.isDestroyed()) {
-        try {
-          // Destroy viewer to free memory
-          viewerRef.current.destroy();
-          viewerRef.current = null;
-        } catch (e) {
-          console.warn('Error destroying viewer:', e);
-        }
-      }
-      
-      // Remove credit container
-      if (creditContainer.current.parentNode) {
-        creditContainer.current.parentNode.removeChild(creditContainer.current);
-      }
-      
-      // Force garbage collection if possible
-      if (window.gc) {
-        try {
-          window.gc();
-        } catch (e) {
-          // Not all browsers support this
-        }
-      }
-    };
-  }, []);
-  
-  // Simplified entity rendering
-  const renderGroupMarkers = () => {
-    // Only render a maximum of 50 markers to prevent performance issues
-    return groups.slice(0, 50).map((group) => {
-      if (!group.geo_location?.coordinates || group.geo_location.coordinates.length < 2) return null;
-      
-      const lng = group.geo_location.coordinates[0];
-      const lat = group.geo_location.coordinates[1];
-      const isSelected = selectedGroupId === group.id;
-      
-      return (
-        <Entity
-          key={group.id}
-          position={Cesium.Cartesian3.fromDegrees(lng, lat)}
-          point={{
-            pixelSize: isSelected ? 12 : 8,
+        // Add the main marker
+        const entity = viewer.entities.add({
+          id: group.id,
+          name: group.name,
+          position: Cesium.Cartesian3.fromDegrees(lng, lat),
+          point: {
+            pixelSize: isSelected ? 15 : 10,
             color: isSelected ? Cesium.Color.YELLOW : Cesium.Color.CYAN,
             outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 2,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          }}
-          label={{
+            outlineWidth: 2
+          },
+          label: {
             text: group.name,
             font: '14px sans-serif',
             style: Cesium.LabelStyle.FILL_AND_OUTLINE,
             outlineWidth: 2,
             verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
             pixelOffset: new Cesium.Cartesian2(0, -10),
-            show: isSelected || false,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          }}
-          onClick={() => onGroupSelect?.(group)}
-        />
-      );
-    });
-  };
-  
+            show: isSelected
+          }
+        });
+      });
+      
+      console.log(`Added ${groups.length} enhanced markers to scene`);
+      
+      // Set up click handler for group selection
+      if (onGroupSelect) {
+        handlerRef.current = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handlerRef.current.setInputAction((click: any) => {
+          const pickedObject = viewer.scene.pick(click.position);
+          if (Cesium.defined(pickedObject) && pickedObject.id) {
+            const entity = pickedObject.id;
+            const selectedGroup = groups.find(g => g.id === entity.id);
+            if (selectedGroup) {
+              // Stop rotation when a group is selected
+              onGroupSelect(selectedGroup);
+            }
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      }
+      
+      // Set up smooth rotation animation
+      if (autoRotate && !selectedGroupId) {
+        const startRotation = () => {
+          if (!viewer || viewer.isDestroyed()) return;
+          
+          let lastTime = Date.now();
+          let spinRate = 0.05; // degrees per second - very slow
+          
+          const rotate = () => {
+            if (!viewer || viewer.isDestroyed()) return;
+            
+            // Get time delta
+            const now = Date.now();
+            const delta = now - lastTime;
+            lastTime = now;
+            
+            // Only update if enough time has passed (throttle updates)
+            if (delta > 0) {
+              // Calculate rotation amount based on time
+              const rotationAmount = (spinRate * delta) / 1000;
+              
+              // Get current camera position
+              const cameraPosition = viewer.camera.position;
+              const cameraDirection = viewer.camera.direction;
+              
+              // Calculate rotation around Earth's center
+              const center = Cesium.Cartesian3.ZERO;
+              const transform = Cesium.Matrix4.fromTranslation(center);
+              
+              // Create rotation matrix around Y axis
+              const rotationMatrix = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(rotationAmount));
+              
+              // Apply rotation to camera position
+              const rotatedPosition = Cesium.Matrix3.multiplyByVector(
+                rotationMatrix, 
+                cameraPosition, 
+                new Cesium.Cartesian3()
+              );
+              
+              // Maintain same distance from center
+              const distance = Cesium.Cartesian3.magnitude(cameraPosition);
+              Cesium.Cartesian3.normalize(rotatedPosition, rotatedPosition);
+              Cesium.Cartesian3.multiplyByScalar(rotatedPosition, distance, rotatedPosition);
+              
+              // Update camera if the calculation is valid
+              if (!isNaN(rotatedPosition.x) && !isNaN(rotatedPosition.y) && !isNaN(rotatedPosition.z)) {
+                viewer.camera.position = rotatedPosition;
+                
+                // Ensure camera still looks at Earth's center
+                viewer.camera.direction = Cesium.Cartesian3.negate(
+                  Cesium.Cartesian3.normalize(rotatedPosition, new Cesium.Cartesian3()),
+                  new Cesium.Cartesian3()
+                );
+              }
+            }
+            
+            // Continue animation
+            animationRef.current = requestAnimationFrame(rotate);
+          };
+          
+          // Start animation loop
+          animationRef.current = requestAnimationFrame(rotate);
+        };
+        
+        // Start rotation after a brief delay to let the scene stabilize
+        setTimeout(startRotation, 1000);
+      }
+      
+      console.log("Enhanced globe ready - should be rotating slowly");
+    } catch (error) {
+      console.error("Error creating enhanced viewer:", error);
+    }
+
+    // Cleanup function
+    return () => {
+      if (handlerRef.current) {
+        handlerRef.current.destroy();
+        handlerRef.current = null;
+      }
+      
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      
+      if (viewerRef.current) {
+        try {
+          viewerRef.current.destroy();
+          viewerRef.current = null;
+          console.log("Enhanced viewer destroyed");
+        } catch (e) {
+          console.error("Error destroying viewer:", e);
+        }
+      }
+    };
+  }, [groups, selectedGroupId, initialCoordinates, onGroupSelect, autoRotate]);
+
+  // Effect to update rotation when autoRotate or selectedGroupId changes
+  useEffect(() => {
+    // Stop rotation if a group is selected or autoRotate is false
+    if (animationRef.current && (!autoRotate || selectedGroupId)) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    // We don't restart rotation here as it's complex - it will restart on the next render if needed
+  }, [autoRotate, selectedGroupId]);
+
   return (
-    <div style={{ height, width, position: 'relative' }}>
-      {/* Loading overlay */}
-      {!imageryReady && (
-        <div style={{
+    <div style={{ 
+      width: width, 
+      height: height, 
+      position: 'relative',
+      overflow: 'hidden' // Prevent any overflow issues
+    }}>
+      <div 
+        ref={containerRef} 
+        style={{ 
+          width: '100%', 
+          height: '100%',
           position: 'absolute',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: '#292929',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div>Loading Globe... Please wait.</div>
-        </div>
-      )}
-      
-      {/* Simplified Cesium Viewer */}
-      <Viewer
-        full
-        ref={(ref: any) => {
-          if (ref?.cesiumElement) {
-            handleViewerMounted(ref.cesiumElement);
-          }
+          zIndex: 1
         }}
-        // Disable all extra widgets for better performance
-        baseLayerPicker={false}
-        geocoder={false}
-        homeButton={false}
-        infoBox={false}
-        sceneModePicker={false}
-        selectionIndicator={false}
-        timeline={false}
-        animation={false}
-        navigationHelpButton={false}
-        fullscreenButton={false}
-        creditContainer={creditContainer.current}
-        terrainProvider={new Cesium.EllipsoidTerrainProvider()}
-        imageryProvider={new Cesium.OpenStreetMapImageryProvider({
-          url: 'https://tile.openstreetmap.org/'
-        })}
-      >
-        {/* Add minimal globe configuration */}
-        <Globe 
-          enableLighting={false}
-          depthTestAgainstTerrain={false}
-        />
-        
-        {/* Only render markers if fully loaded */}
-        {imageryReady && renderGroupMarkers()}
-      </Viewer>
+      />
     </div>
   );
 };
