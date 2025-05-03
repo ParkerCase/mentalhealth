@@ -16,39 +16,7 @@ interface GlobeOptimizerProps {
 }
 
 /**
- * Helper to create terrain provider with proper fallbacks
- */
-function createCompatibleTerrainProvider(): Cesium.TerrainProvider {
-  try {
-    if ((Cesium.Ion as any)?.createWorldTerrain) {
-      return (Cesium.Ion as any).createWorldTerrain({
-        requestVertexNormals: true,
-        requestWaterMask: true
-      });
-    }
-
-    if (Cesium.CesiumTerrainProvider) {
-      return new Cesium.CesiumTerrainProvider({
-        url: 'https://assets.agi.com/stk-terrain/world'
-      } as any);
-    }
-  } catch (e) {
-    console.warn('Falling back to flat terrain:', e);
-  }
-
-  return new Cesium.EllipsoidTerrainProvider(); // ✅ safest fallback
-}
-
-
-/**
- * Helper to safely handle both Promise and direct return for terrain providers
- */
-function isPromiseLike<T>(obj: any): obj is Promise<T> {
-  return !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
-}
-
-/**
- * Optimizes the Globe component for different performance targets
+ * GlobeOptimizer - Configures performance settings for the Cesium globe
  */
 const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
   performanceLevel = 'medium',
@@ -60,206 +28,172 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
 }) => {
   const { viewer, scene } = useCesium();
 
-  // Helper function to handle terrain provider creation safely
-  const createAndSetTerrainProvider = (options: { 
-    requestVertexNormals?: boolean, 
-    requestWaterMask?: boolean 
-  } = {}) => {
-    if (!viewer || viewer.isDestroyed()) return;
-    
+  // Helper function to safely create EllipsoidTerrainProvider
+  const createSafeTerrainProvider = () => {
     try {
-      // Try to create the terrain provider
-// Don't override if fallback terrain is already set
-if (
-  viewer?.terrainProvider instanceof Cesium.EllipsoidTerrainProvider &&
-  performanceLevel === 'medium'
-) {
-  console.warn("Preserving safe EllipsoidTerrainProvider — skipping terrain override.");
-  return;
-}
-
-// Otherwise proceed with terrain override
-let terrainProvider = createCompatibleTerrainProvider();
-      
-      // Handle both Promise-based and direct return scenarios
-      if (isPromiseLike<Cesium.TerrainProvider>(terrainProvider)) {
-        // Using Promise.resolve to safely handle the promise
-        Promise.resolve(terrainProvider)
-          .then((resolvedProvider: Cesium.TerrainProvider) => {
-            if (viewer && !viewer.isDestroyed()) {
-              viewer.terrainProvider = resolvedProvider;
-            }
-          })
-          .catch((error: any) => {
-            console.warn('Failed to load terrain provider:', error);
-            
-          });
-      } else {
-        // Direct assignment for non-Promise return value
-        if (!viewer.isDestroyed()) {
-          viewer.terrainProvider = terrainProvider;
-        }
-      }
+      return new Cesium.EllipsoidTerrainProvider();
     } catch (e) {
-      console.warn('Failed to set terrain provider:', e);
+      console.warn('Error creating EllipsoidTerrainProvider:', e);
+      return null;
     }
   };
 
   useEffect(() => {
-    if (!viewer || !scene) return;
+    if (!viewer || !scene || viewer.isDestroyed() || scene.isDestroyed()) return;
 
-    // Configure the viewer based on performance level
-    const configurePerformance = () => {
-      if (!viewer || !scene || viewer.isDestroyed() || scene.isDestroyed()) return;
+    // Apply basic performance settings
+    try {
+      // Configure fog
+      if (scene.fog) {
+        scene.fog.enabled = globalFogDensity > 0;
+        scene.fog.density = globalFogDensity * 0.0001;
+      }
       
-      // Apply core settings that are safe across versions
-      try {
-        // Set fog settings
-        if (scene.fog) {
-          scene.fog.enabled = globalFogDensity > 0;
-          scene.fog.density = globalFogDensity * 0.0001; // Scale for Cesium's units
+      // Set frame rate
+      (viewer as any).targetFrameRate = targetFrameRate;
+      
+      // Request render mode for better performance
+      (viewer as any).requestRenderMode = true;
+      (viewer as any).maximumRenderTimeChange = Infinity;
+    } catch (e) {
+      console.warn('Error applying basic performance settings:', e);
+    }
+
+    // Configure based on performance level
+    switch (performanceLevel) {
+      case 'low':
+        // Disable expensive effects
+        if (scene.fog) scene.fog.enabled = false;
+        if (scene.skyAtmosphere) scene.skyAtmosphere.show = false;
+        scene.globe.enableLighting = false;
+        
+        // Disable sun, moon, and stars
+        try {
+          if (scene.sun) scene.sun.show = false;
+          if (scene.moon) scene.moon.show = false;
+          if (scene.skyBox) scene.skyBox.show = false;
+        } catch (e) {
+          console.warn('Error disabling celestial bodies:', e);
         }
         
-        // Try to set target frame rate if supported
-        (viewer as any).targetFrameRate = targetFrameRate;
+        // Disable anti-aliasing
+        try {
+          if (scene.postProcessStages?.fxaa) {
+            scene.postProcessStages.fxaa.enabled = false;
+          }
+        } catch (e) {
+          console.warn('Error disabling FXAA:', e);
+        }
         
-        // Try to enable request render mode if supported
-        (viewer as any).requestRenderMode = true;
-      } catch (e) {
-        console.warn('Could not set some Cesium performance options:', e);
-      }
-      
-      // Apply performance level presets
-      switch (performanceLevel) {
-        case 'low':
-          if (scene.fog) scene.fog.enabled = false;
-          if (scene.skyAtmosphere) scene.skyAtmosphere.show = false;
-          scene.globe.enableLighting = false;
-      
+        // Lower terrain resolution
+        scene.globe.maximumScreenSpaceError = 4;
+        break;
+        
+      case 'medium':
+        // Balanced settings
+        if (scene.fog) scene.fog.enabled = true;
+        if (scene.skyAtmosphere) scene.skyAtmosphere.show = true;
+        scene.globe.enableLighting = dynamicLighting;
+        scene.globe.maximumScreenSpaceError = 2;
+        
+        // Enable basic anti-aliasing
+        try {
+          if (scene.postProcessStages?.fxaa) {
+            scene.postProcessStages.fxaa.enabled = true;
+          }
+        } catch (e) {
+          console.warn('Error enabling FXAA:', e);
+        }
+        
+        // Keep the default EllipsoidTerrainProvider for better performance
+        break;
+        
+      case 'high':
+        // High quality
+        if (scene.fog) scene.fog.enabled = true;
+        if (scene.skyAtmosphere) scene.skyAtmosphere.show = true;
+        scene.globe.enableLighting = true;
+        scene.globe.maximumScreenSpaceError = 1.5;
+        
+        // Enable anti-aliasing
+        try {
+          if (scene.postProcessStages?.fxaa) {
+            scene.postProcessStages.fxaa.enabled = true;
+          }
+        } catch (e) {
+          console.warn('Error enabling FXAA:', e);
+        }
+        
+        // Enable shadows
+        try {
+          if (viewer.shadowMap) {
+            viewer.shadowMap.enabled = true;
+            viewer.shadowMap.softShadows = false;
+          }
+        } catch (e) {
+          console.warn('Error enabling shadows:', e);
+        }
+        
+        // Try to use CesiumTerrainProvider if available
+        if (dynamicTerrain && Cesium.CesiumTerrainProvider) {
           try {
-            (scene as any).sun = undefined;
-            (scene as any).moon = undefined;
-            if (scene.skyBox) scene.skyBox.show = false;
-            (scene as any).fxaa = false;
-            if (scene.postProcessStages?.fxaa) {
-              scene.postProcessStages.fxaa.enabled = false;
-            }
+            // Keep using EllipsoidTerrainProvider for now to avoid token issues
+            // We would normally use CesiumTerrainProvider here
           } catch (e) {
-            console.warn('Some scene elements not available:', e);
+            console.warn('Error creating terrain provider:', e);
           }
-      
-          scene.globe.maximumScreenSpaceError = 4;
-      
-          break; // ✅ Prevents unintentional fall-through to 'medium'
-      
-        case 'medium':
-          if (scene.fog) scene.fog.enabled = true;
-          if (scene.skyAtmosphere) scene.skyAtmosphere.show = true;
-          scene.globe.enableLighting = dynamicLighting;
-          scene.globe.maximumScreenSpaceError = 2;
-      
+        }
+        break;
+        
+      case 'ultra':
+        // Maximum quality
+        if (scene.fog) scene.fog.enabled = true;
+        if (scene.skyAtmosphere) scene.skyAtmosphere.show = true;
+        scene.globe.enableLighting = true;
+        scene.globe.maximumScreenSpaceError = 1;
+        
+        // Enable anti-aliasing
+        try {
+          if (scene.postProcessStages?.fxaa) {
+            scene.postProcessStages.fxaa.enabled = true;
+          }
+        } catch (e) {
+          console.warn('Error enabling FXAA:', e);
+        }
+        
+        // Enable shadows with soft shadows
+        try {
+          if (viewer.shadowMap) {
+            viewer.shadowMap.enabled = true;
+            viewer.shadowMap.softShadows = true;
+          }
+        } catch (e) {
+          console.warn('Error enabling soft shadows:', e);
+        }
+        
+        // Try to use CesiumTerrainProvider with vertex normals
+        if (dynamicTerrain && Cesium.CesiumTerrainProvider) {
           try {
-            (scene as any).fxaa = true;
-            if (scene.postProcessStages?.fxaa) {
-              scene.postProcessStages.fxaa.enabled = true;
-            }
+            // Keep using EllipsoidTerrainProvider for now to avoid token issues
+            // We would normally use CesiumTerrainProvider with vertex normals here
           } catch (e) {
-            console.warn('Could not set fxaa:', e);
+            console.warn('Error creating terrain provider with vertex normals:', e);
           }
-      
-          if (dynamicTerrain) {
-            createAndSetTerrainProvider({ 
-              requestVertexNormals: false, 
-              requestWaterMask: false 
-            });
-          }
-      
-          break; // ✅ Critical!
-          
-        case 'high':
-          // High quality with good performance
-          if (scene.fog) scene.fog.enabled = true;
-          if (scene.skyAtmosphere) scene.skyAtmosphere.show = true;
-          scene.globe.enableLighting = true;
-          scene.globe.maximumScreenSpaceError = 1.5;
-          
-          // Enable anti-aliasing
-          try {
-            (scene as any).fxaa = true;
-            if (scene.postProcessStages?.fxaa) {
-              scene.postProcessStages.fxaa.enabled = true;
-            }
-          } catch (e) {
-            console.warn('Could not set fxaa:', e);
-          }
-          
-          // Enable shadows if available
-          try {
-            if (viewer.shadowMap) {
-              viewer.shadowMap.enabled = true;
-              viewer.shadowMap.softShadows = false;
-            }
-          } catch (e) {
-            console.warn('Could not configure shadows:', e);
-          }
-          
-          // Use terrain with high detail
-          createAndSetTerrainProvider({ 
-            requestVertexNormals: true,
-            requestWaterMask: false
-          });
-          break;
-          
-        case 'ultra':
-          // Maximum quality
-          if (scene.fog) scene.fog.enabled = true;
-          if (scene.skyAtmosphere) scene.skyAtmosphere.show = true;
-          scene.globe.enableLighting = true;
-          scene.globe.maximumScreenSpaceError = 1;
-          
-          // Enable anti-aliasing
-          try {
-            (scene as any).fxaa = true;
-            if (scene.postProcessStages?.fxaa) {
-              scene.postProcessStages.fxaa.enabled = true;
-            }
-          } catch (e) {
-            console.warn('Could not set fxaa:', e);
-          }
-          
-          // Enable shadows if available
-          try {
-            if (viewer.shadowMap) {
-              viewer.shadowMap.enabled = true;
-              viewer.shadowMap.softShadows = true;
-            }
-          } catch (e) {
-            console.warn('Could not configure shadows:', e);
-          }
-          
-          // Use terrain with maximum detail
-          createAndSetTerrainProvider({ 
-            requestVertexNormals: true,
-            requestWaterMask: true
-          });
-          break;
-      }
-      
-      // Try to configure frustum culling if available
-      try {
-        (scene as any).cullWithChildrenBounds = useFrustumCulling;
-      } catch (e) {
-        console.warn('cullWithChildrenBounds not available:', e);
-      }
-      
-      // Force a render to apply changes
-      scene.requestRender();
-    };
+        }
+        break;
+    }
     
-    // Apply the configuration
-    configurePerformance();
+    // Try to configure frustum culling if available
+    try {
+      (scene as any).cullWithChildrenBounds = useFrustumCulling;
+    } catch (e) {
+      console.warn('Error setting cullWithChildrenBounds:', e);
+    }
     
-    // Simple performance monitor (without adjustments)
+    // Force a render to apply changes
+    scene.requestRender();
+    
+    // Frame counter for performance monitoring
     let frameCount = 0;
     let lastTime = performance.now();
     
@@ -268,10 +202,14 @@ let terrainProvider = createCompatibleTerrainProvider();
       const now = performance.now();
       const delta = now - lastTime;
       
-      // Measure FPS every second
+      // Log FPS every second
       if (delta >= 1000) {
         const fps = frameCount * 1000 / delta;
-        console.debug(`Current FPS: ${fps.toFixed(1)}`);
+        
+        // Only log in development or when debug is needed
+        if (process.env.NODE_ENV === 'development') {
+          console.debug(`Globe FPS: ${fps.toFixed(1)}`);
+        }
         
         // Reset counters
         frameCount = 0;
@@ -279,26 +217,31 @@ let terrainProvider = createCompatibleTerrainProvider();
       }
     };
     
-    // Try to add pre-render event for monitoring
+    // Add performance monitor
+    let removePerformanceMonitor: (() => void) | undefined;
     try {
-      scene.preRender.addEventListener(performanceMonitor);
+      const preRenderEvent = scene.preRender;
+      if (preRenderEvent && typeof preRenderEvent.addEventListener === 'function') {
+        preRenderEvent.addEventListener(performanceMonitor);
+        removePerformanceMonitor = () => preRenderEvent.removeEventListener(performanceMonitor);
+      }
     } catch (e) {
-      console.warn('Could not add performance monitor:', e);
+      console.warn('Error adding performance monitor:', e);
     }
     
-    // Cleanup
+    // Return cleanup function
     return () => {
-      try {
-        if (scene && !scene.isDestroyed()) {
-          scene.preRender.removeEventListener(performanceMonitor);
+      if (removePerformanceMonitor) {
+        try {
+          removePerformanceMonitor();
+        } catch (e) {
+          console.warn('Error removing performance monitor:', e);
         }
-      } catch (e) {
-        console.warn('Could not remove performance monitor:', e);
       }
     };
   }, [viewer, scene, performanceLevel, targetFrameRate, useFrustumCulling, dynamicLighting, dynamicTerrain, globalFogDensity]);
 
-  // This component doesn't render anything directly
+  // No direct rendering
   return null;
 };
 
