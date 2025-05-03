@@ -129,7 +129,7 @@ const WeatherEffects: React.FC<WeatherEffectsProps> = ({
       }
       
       // Now type comparison works correctly since we've explicitly defined WeatherType
-      if (type !== 'clear' && (Cesium as any).ParticleSystem) {
+      if (type !== 'clouds' && (Cesium as any).ParticleSystem) {
         try {
           const defaultPosition = Cesium.Cartesian3.fromDegrees(
             location?.lng ?? -95, 

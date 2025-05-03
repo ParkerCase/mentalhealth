@@ -18,47 +18,27 @@ interface GlobeOptimizerProps {
 /**
  * Helper to create terrain provider with proper fallbacks
  */
-function createCompatibleTerrainProvider(options: { 
-  requestVertexNormals?: boolean, 
-  requestWaterMask?: boolean 
-} = {}) {
+function createCompatibleTerrainProvider(): Cesium.TerrainProvider {
   try {
-    // Handle different Cesium versions with type assertion for TypeScript
-    if (Cesium.Ion) {
-      // Cast to any to bypass TypeScript errors
-      const ionAny = Cesium.Ion as any;
-      if (typeof ionAny.createWorldTerrain === 'function') {
-        return ionAny.createWorldTerrain(options);
-      }
+    if ((Cesium.Ion as any)?.createWorldTerrain) {
+      return (Cesium.Ion as any).createWorldTerrain({
+        requestVertexNormals: true,
+        requestWaterMask: true
+      });
     }
-    
-    // For older versions as a fallback
-    if (typeof (Cesium as any).createWorldTerrain === 'function') {
-      return (Cesium as any).createWorldTerrain(options);
-    }
-    
-    // Check for CesiumTerrainProvider
+
     if (Cesium.CesiumTerrainProvider) {
-      // Handle different ways to set the URL
-      if (Cesium.IonResource) {
-        // Use type assertion to bypass TypeScript checking
-        return new Cesium.CesiumTerrainProvider({
-          url: 'https://assets.agi.com/stk-terrain/world' as any
-        });
-      } else {
-        return new Cesium.CesiumTerrainProvider({
-          url: 'https://assets.agi.com/stk-terrain/world'
-        });
-      }
+      return new Cesium.CesiumTerrainProvider({
+        url: 'https://assets.agi.com/stk-terrain/world'
+      } as any);
     }
-    
-    // Final fallback to flat terrain
-    return new Cesium.EllipsoidTerrainProvider();
   } catch (e) {
-    console.warn('Error creating terrain provider:', e);
-    return new Cesium.EllipsoidTerrainProvider();
+    console.warn('Falling back to flat terrain:', e);
   }
+
+  return new Cesium.EllipsoidTerrainProvider(); // ✅ safest fallback
 }
+
 
 /**
  * Helper to safely handle both Promise and direct return for terrain providers
@@ -89,7 +69,17 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
     
     try {
       // Try to create the terrain provider
-      let terrainProvider = createCompatibleTerrainProvider(options);
+// Don't override if fallback terrain is already set
+if (
+  viewer?.terrainProvider instanceof Cesium.EllipsoidTerrainProvider &&
+  performanceLevel === 'medium'
+) {
+  console.warn("Preserving safe EllipsoidTerrainProvider — skipping terrain override.");
+  return;
+}
+
+// Otherwise proceed with terrain override
+let terrainProvider = createCompatibleTerrainProvider();
       
       // Handle both Promise-based and direct return scenarios
       if (isPromiseLike<Cesium.TerrainProvider>(terrainProvider)) {
@@ -102,9 +92,7 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           })
           .catch((error: any) => {
             console.warn('Failed to load terrain provider:', error);
-            if (viewer && !viewer.isDestroyed()) {
-              viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-            }
+            
           });
       } else {
         // Direct assignment for non-Promise return value
@@ -114,9 +102,6 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
       }
     } catch (e) {
       console.warn('Failed to set terrain provider:', e);
-      if (viewer && !viewer.isDestroyed()) {
-        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-      }
     }
   };
 
@@ -147,19 +132,14 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
       // Apply performance level presets
       switch (performanceLevel) {
         case 'low':
-          // Low quality for better performance
           if (scene.fog) scene.fog.enabled = false;
           if (scene.skyAtmosphere) scene.skyAtmosphere.show = false;
           scene.globe.enableLighting = false;
-          
-          // Try to disable sun/moon/stars
+      
           try {
-            // These might not be available in all versions
             (scene as any).sun = undefined;
             (scene as any).moon = undefined;
             if (scene.skyBox) scene.skyBox.show = false;
-            
-            // Disable anti-aliasing
             (scene as any).fxaa = false;
             if (scene.postProcessStages?.fxaa) {
               scene.postProcessStages.fxaa.enabled = false;
@@ -167,26 +147,17 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           } catch (e) {
             console.warn('Some scene elements not available:', e);
           }
-          
-          // Lower terrain quality
+      
           scene.globe.maximumScreenSpaceError = 4;
-          
-          // Use simple terrain
-          try {
-            viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-          } catch (e) {
-            console.warn('Error setting terrain provider:', e);
-          }
-          break;
-          
+      
+          break; // ✅ Prevents unintentional fall-through to 'medium'
+      
         case 'medium':
-          // Balanced quality and performance
           if (scene.fog) scene.fog.enabled = true;
           if (scene.skyAtmosphere) scene.skyAtmosphere.show = true;
           scene.globe.enableLighting = dynamicLighting;
           scene.globe.maximumScreenSpaceError = 2;
-          
-          // Enable anti-aliasing if available
+      
           try {
             (scene as any).fxaa = true;
             if (scene.postProcessStages?.fxaa) {
@@ -195,15 +166,15 @@ const GlobeOptimizer: React.FC<GlobeOptimizerProps> = ({
           } catch (e) {
             console.warn('Could not set fxaa:', e);
           }
-          
-          // Use terrain with moderate detail if available
+      
           if (dynamicTerrain) {
             createAndSetTerrainProvider({ 
               requestVertexNormals: false, 
               requestWaterMask: false 
             });
           }
-          break;
+      
+          break; // ✅ Critical!
           
         case 'high':
           // High quality with good performance

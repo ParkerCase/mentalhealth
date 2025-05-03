@@ -5,6 +5,14 @@ import Link from 'next/link'
 import { useAuthStore } from '@/lib/stores/authStore'
 import dynamic from 'next/dynamic'
 
+if (typeof window !== 'undefined') {
+  (window as any).CESIUM_BASE_URL = '/Cesium';
+}
+
+
+
+import 'cesium/Build/Cesium/Widgets/widgets.css';
+
 // Dynamically import the Globe component with no SSR
 const GlobeComponent = dynamic(() => import('@/components/globe/index').then(mod => mod.GlobeComponent), { 
   ssr: false,

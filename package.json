@@ -20,7 +20,7 @@
     "@supabase/supabase-js": "^2.38.4",
     "@types/webpack-env": "^1.18.8",
     "bufferutil": "^4.0.9",
-    "cesium": "^1.128.0",
+    "cesium": "1.104",
     "date-fns": "^2.30.0",
     "file-loader": "^6.2.0",
     "globe.gl": "^2.41.4",
