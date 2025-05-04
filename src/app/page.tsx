@@ -45,8 +45,8 @@ const exampleGroups = [
 ];
 
 // Dynamically import the globe component with no SSR
-const RealisticGlobe = dynamic(
-  () => import('@/components/globe/RealisticGlobePerformance'),
+const EnhancedGlobe = dynamic(
+  () => import('@/components/globe/EnhancedRealisticGlobe').then(mod => mod.default as React.ComponentType<any>),
   { 
     ssr: false,
     loading: () => (
@@ -137,7 +137,7 @@ export default function Home() {
                 </div>
               </div>
             }>
-              <RealisticGlobe 
+              <EnhancedGlobe 
                 height="100vh"
                 width="100%"
                 groups={exampleGroups}
