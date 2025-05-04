@@ -30,7 +30,6 @@ interface RealisticGlobeProps {
   debugInfo?: boolean;
 }
 
-// Fixed version with NO dependency on local assets
 const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
   height = '100vh',
   width = '100%',
@@ -49,19 +48,17 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
     
-    console.log("Creating Cesium viewer with ZERO local assets...");
+    console.log("Creating Cesium viewer...");
     
     try {
-      // Set default access token (this is a public demo token, replace with your own for production)
-      // This is needed for Cesium's online services
+      // Set default access token
       Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYTdlZGJlMi00Y2JjLTQyMjEtOGVmOS1hNjE4MTEyZTYwZmQiLCJpZCI6MTQ1MSwiaWF0IjoxNjA4ODkwMjQ0fQ.Wk0FfA5YxB9lGYJtQHY3h-USVWRlEPRYCrmEqbGlaGs';
 
-      // Create a hidden credits element to avoid layout issues
+      // Create a hidden credits element
       const credits = document.createElement('div');
       credits.style.display = 'none';
 
-      // Create a basic viewer with NO custom imagery
-      // Use Cesium's default Natural Earth II imagery which is built-in to Cesium
+      // Create basic viewer
       const viewer = new Cesium.Viewer(containerRef.current, {
         animation: false,
         baseLayerPicker: false,
@@ -73,7 +70,6 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
         selectionIndicator: false,
         timeline: false,
         navigationHelpButton: false,
-        // This is a built-in imagery provider that doesn't rely on external files
         imageryProvider: new Cesium.TileMapServiceImageryProvider({
           url: Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
         }),
@@ -82,7 +78,7 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
       
       viewerRef.current = viewer;
       
-      // Configure scene for better performance based on performance level
+      // Configure scene for better performance
       const scene = viewer.scene;
       
       // Set background color
@@ -134,7 +130,7 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
         destination: Cesium.Cartesian3.fromDegrees(
           initialCoordinates?.lng || -98.5795,
           initialCoordinates?.lat || 39.8283,
-          initialCoordinates ? 5000000 : 15000000 // Closer if we have coordinates
+          initialCoordinates ? 5000000 : 15000000
         ),
         duration: 0
       });
@@ -147,8 +143,7 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
         const lat = group.geo_location.coordinates[1];
         const isSelected = selectedGroupId === group.id;
         
-        // Add the main marker
-        const entity = viewer.entities.add({
+        viewer.entities.add({
           id: group.id,
           name: group.name,
           position: Cesium.Cartesian3.fromDegrees(lng, lat),
@@ -188,63 +183,30 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
       // Set up smooth rotation animation if enabled
       if (autoRotate && !selectedGroupId) {
         const startRotation = () => {
-          if (!viewer || viewer.isDestroyed()) return;
-          
-          // Set up rotation around Earth's center
-          const center = Cesium.Cartesian3.ZERO;
-          let lastTime = Date.now();
           const rotationSpeed = 0.05; // degrees per second
           
-          const rotate = () => {
-            if (!viewer || viewer.isDestroyed()) return;
-            
-            // Calculate time delta
-            const now = Date.now();
-            const deltaTime = now - lastTime;
-            lastTime = now;
-            
-            // Calculate rotation amount
-            const rotationAmount = (rotationSpeed * deltaTime) / 1000;
-            
-            // Create rotation matrix around Y axis (longitude)
-            const rotationMatrix = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(rotationAmount));
-            
-            // Get current camera position
-            const position = viewer.camera.position;
-            const distance = Cesium.Cartesian3.magnitude(position);
-            
-            // Apply rotation
-            const rotatedPosition = new Cesium.Cartesian3();
-            Cesium.Matrix3.multiplyByVector(rotationMatrix, position, rotatedPosition);
-            
-            // Maintain same distance
-            const normalizedPos = Cesium.Cartesian3.normalize(rotatedPosition, new Cesium.Cartesian3());
-            Cesium.Cartesian3.multiplyByScalar(normalizedPos, distance, rotatedPosition);
-            
-            // Update camera if valid
-            if (!isNaN(rotatedPosition.x) && !isNaN(rotatedPosition.y) && !isNaN(rotatedPosition.z)) {
-              viewer.camera.position = rotatedPosition;
-              
-              // Keep looking at the center
-              viewer.camera.lookAt(
-                center,
-                new Cesium.HeadingPitchRange(0, -Cesium.Math.toRadians(30), 0)
-              );
+          const tick = () => {
+            if (!viewer || viewer.isDestroyed() || selectedGroupId) {
+              return;
             }
             
-            // Continue animation
-            animationRef.current = requestAnimationFrame(rotate);
+            // Use camera.rotate instead of manual positioning
+            viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Cesium.Math.toRadians(rotationSpeed / 60.0));
           };
           
-          // Start animation loop
-          animationRef.current = requestAnimationFrame(rotate);
+          viewer.clock.onTick.addEventListener(tick);
+          
+          // Start clock animation
+          setInterval(() => {
+            viewer.clock.tick();
+          }, 1000 / 60);
         };
         
         // Start rotation after a brief delay
         setTimeout(startRotation, 1000);
       }
       
-      console.log("Built-in globe imagery ready");
+      console.log("Globe ready");
     } catch (error) {
       console.error("Error creating viewer:", error);
     }
@@ -271,15 +233,6 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
       }
     };
   }, [groups, selectedGroupId, initialCoordinates, onGroupSelect, autoRotate, performanceLevel]);
-
-  // Effect to update rotation when autoRotate or selectedGroupId changes
-  useEffect(() => {
-    // Stop rotation if a group is selected or autoRotate is false
-    if (animationRef.current && (!autoRotate || selectedGroupId)) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
-  }, [autoRotate, selectedGroupId]);
 
   return (
     <div style={{ 

@@ -1,0 +1,379 @@
+.
+├── Cesium-Globe-Viewer
+│   ├── Cesium-1.118
+│   │   ├── Apps
+│   │   │   ├── CesiumViewer
+│   │   │   ├── HelloWorld.html
+│   │   │   ├── SampleData
+│   │   │   ├── Sandcastle
+│   │   │   └── TimelineDemo
+│   │   ├── Build
+│   │   │   ├── Cesium
+│   │   │   ├── CesiumUnminified
+│   │   │   ├── Documentation
+│   │   │   ├── Specs
+│   │   │   └── package.json
+│   │   ├── CHANGES.md
+│   │   ├── LICENSE.md
+│   │   ├── README.md
+│   │   ├── Source
+│   │   │   ├── Assets
+│   │   │   ├── Cesium.d.ts
+│   │   │   ├── Cesium.js
+│   │   │   ├── ThirdParty
+│   │   │   ├── Widgets
+│   │   │   └── copyrightHeader.js
+│   │   ├── Specs
+│   │   │   ├── BadGeometry.js
+│   │   │   ├── Cesium3DTilesTester.js
+│   │   │   ├── Data
+│   │   │   ├── DomEventSimulator.js
+│   │   │   ├── ImplicitTilingTester.js
+│   │   │   ├── MetadataTester.js
+│   │   │   ├── MockDataSource.js
+│   │   │   ├── MockImageryProvider.js
+│   │   │   ├── MockTerrainProvider.js
+│   │   │   ├── ShaderBuilderTester.js
+│   │   │   ├── SpecList.js
+│   │   │   ├── SpecRunner.html
+│   │   │   ├── TerrainTileProcessor.js
+│   │   │   ├── TestWorkers
+│   │   │   ├── TypeScript
+│   │   │   ├── ViewportPrimitive.js
+│   │   │   ├── absolutize.js
+│   │   │   ├── addDefaultMatchers.js
+│   │   │   ├── concatTypedArrays.js
+│   │   │   ├── createCamera.js
+│   │   │   ├── createCanvas.js
+│   │   │   ├── createContext.js
+│   │   │   ├── createDynamicGeometryUpdaterSpecs.js
+│   │   │   ├── createDynamicProperty.js
+│   │   │   ├── createFrameState.js
+│   │   │   ├── createGeometryUpdaterGroundGeometrySpecs.js
+│   │   │   ├── createGeometryUpdaterSpecs.js
+│   │   │   ├── createGlobe.js
+│   │   │   ├── createPackableArraySpecs.js
+│   │   │   ├── createPackableSpecs.js
+│   │   │   ├── createScene.js
+│   │   │   ├── createTileKey.js
+│   │   │   ├── customizeJasmine.js
+│   │   │   ├── dataUriToBuffer.js
+│   │   │   ├── e2e
+│   │   │   ├── equals.js
+│   │   │   ├── equalsMethodEqualityTester.js
+│   │   │   ├── generateJsonBuffer.js
+│   │   │   ├── getArguments.js
+│   │   │   ├── getWebGLStub.js
+│   │   │   ├── jasmine
+│   │   │   ├── karma-main.js
+│   │   │   ├── karma.conf.cjs
+│   │   │   ├── loaderProcess.js
+│   │   │   ├── pick.js
+│   │   │   ├── pollToPromise.js
+│   │   │   ├── render.js
+│   │   │   ├── runLater.js
+│   │   │   ├── spec-main.js
+│   │   │   ├── test.cjs
+│   │   │   ├── test.mjs
+│   │   │   ├── testDefinitionChanged.js
+│   │   │   ├── testMaterialDefinitionChanged.js
+│   │   │   └── waitForLoaderProcess.js
+│   │   ├── ThirdParty
+│   │   │   ├── codemirror-5.52.0
+│   │   │   ├── dojo-release-1.10.4
+│   │   │   └── jshint-2.13.4
+│   │   ├── eslint.config.js
+│   │   ├── favicon.ico
+│   │   ├── gulpfile.js
+│   │   ├── index.cjs
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   ├── packages
+│   │   │   ├── engine
+│   │   │   └── widgets
+│   │   ├── scripts
+│   │   │   ├── ContextCache.js
+│   │   │   ├── build.js
+│   │   │   └── createRoute.js
+│   │   ├── server.js
+│   │   └── web.config
+│   ├── app.js
+│   ├── favicon.png
+│   ├── index.html
+│   ├── package-lock.json
+│   └── package.json
+├── PRODUCTION-READINESS.md
+├── README.md
+├── eslint.config.mjs
+├── middleware.ts
+├── next-env.d.ts
+├── next.config.js
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── postcss.config.mjs
+├── project-structure.txt
+├── public
+│   ├── Cesium
+│   │   ├── Assets
+│   │   │   ├── IAU2006_XYS
+│   │   │   ├── Images
+│   │   │   ├── Textures
+│   │   │   └── approximateTerrainHeights.json
+│   │   ├── Cesium.js
+│   │   ├── ThirdParty
+│   │   │   ├── Workers
+│   │   │   ├── basis_transcoder.wasm
+│   │   │   ├── draco_decoder.wasm
+│   │   │   └── google-earth-dbroot-parser.js
+│   │   ├── Widgets
+│   │   │   ├── Animation
+│   │   │   ├── BaseLayerPicker
+│   │   │   ├── Cesium3DTilesInspector
+│   │   │   ├── CesiumInspector
+│   │   │   ├── CesiumWidget
+│   │   │   ├── FullscreenButton
+│   │   │   ├── Geocoder
+│   │   │   ├── Images
+│   │   │   ├── InfoBox
+│   │   │   ├── NavigationHelpButton
+│   │   │   ├── PerformanceWatchdog
+│   │   │   ├── ProjectionPicker
+│   │   │   ├── SceneModePicker
+│   │   │   ├── SelectionIndicator
+│   │   │   ├── Timeline
+│   │   │   ├── VRButton
+│   │   │   ├── Viewer
+│   │   │   ├── VoxelInspector
+│   │   │   ├── lighter.css
+│   │   │   ├── lighterShared.css
+│   │   │   ├── shared.css
+│   │   │   └── widgets.css
+│   │   ├── Workers
+│   │   │   ├── ArcType-26a3f38d.js
+│   │   │   ├── AttributeCompression-48e336db.js
+│   │   │   ├── AxisAlignedBoundingBox-2c0751ca.js
+│   │   │   ├── BoundingRectangle-1d581417.js
+│   │   │   ├── BoxGeometry-7873f350.js
+│   │   │   ├── Color-498d4f06.js
+│   │   │   ├── ComponentDatatype-ab629b88.js
+│   │   │   ├── CoplanarPolygonGeometryLibrary-281d77bd.js
+│   │   │   ├── CorridorGeometryLibrary-99cbed9f.js
+│   │   │   ├── CylinderGeometry-0a9d0885.js
+│   │   │   ├── CylinderGeometryLibrary-f49f33a8.js
+│   │   │   ├── EllipseGeometry-109eeb71.js
+│   │   │   ├── EllipseGeometryLibrary-46203226.js
+│   │   │   ├── EllipseOutlineGeometry-9a63dd89.js
+│   │   │   ├── EllipsoidGeodesic-2723ab86.js
+│   │   │   ├── EllipsoidGeometry-bc8054b2.js
+│   │   │   ├── EllipsoidOutlineGeometry-87822a0e.js
+│   │   │   ├── EllipsoidRhumbLine-77eff028.js
+│   │   │   ├── EllipsoidTangentPlane-d430e7d5.js
+│   │   │   ├── EncodedCartesian3-5e2017ab.js
+│   │   │   ├── FrustumGeometry-56d43066.js
+│   │   │   ├── GeometryAttribute-b8117bde.js
+│   │   │   ├── GeometryAttributes-1e4ddcd2.js
+│   │   │   ├── GeometryInstance-0318e0cd.js
+│   │   │   ├── GeometryOffsetAttribute-2579b8d2.js
+│   │   │   ├── GeometryPipeline-fcaf4d4d.js
+│   │   │   ├── IndexDatatype-d3db4e7d.js
+│   │   │   ├── IntersectionTests-a57eed59.js
+│   │   │   ├── Math-2ce22ee9.js
+│   │   │   ├── Matrix2-413c4048.js
+│   │   │   ├── Matrix3-81054f0f.js
+│   │   │   ├── OrientedBoundingBox-fc7f7ca4.js
+│   │   │   ├── Plane-6add0ae1.js
+│   │   │   ├── PolygonGeometryLibrary-d7e504f0.js
+│   │   │   ├── PolygonPipeline-621b1cb0.js
+│   │   │   ├── PolylinePipeline-5ae670bc.js
+│   │   │   ├── PolylineVolumeGeometryLibrary-664193d8.js
+│   │   │   ├── PrimitivePipeline-d5ba52bd.js
+│   │   │   ├── RectangleGeometryLibrary-990f9a1a.js
+│   │   │   ├── RuntimeError-9b4ce3fb.js
+│   │   │   ├── TerrainEncoding-7a03fd29.js
+│   │   │   ├── Transforms-20461479.js
+│   │   │   ├── VertexFormat-fbdec922.js
+│   │   │   ├── WallGeometryLibrary-55d2dc1a.js
+│   │   │   ├── WebGLConstants-7f557f93.js
+│   │   │   ├── WebMercatorProjection-943e2226.js
+│   │   │   ├── arrayRemoveDuplicates-9b636830.js
+│   │   │   ├── cesiumWorkerBootstrapper.js
+│   │   │   ├── combine-0c102d93.js
+│   │   │   ├── combineGeometry.js
+│   │   │   ├── createBoxGeometry.js
+│   │   │   ├── createBoxOutlineGeometry.js
+│   │   │   ├── createCircleGeometry.js
+│   │   │   ├── createCircleOutlineGeometry.js
+│   │   │   ├── createCoplanarPolygonGeometry.js
+│   │   │   ├── createCoplanarPolygonOutlineGeometry.js
+│   │   │   ├── createCorridorGeometry.js
+│   │   │   ├── createCorridorOutlineGeometry.js
+│   │   │   ├── createCylinderGeometry.js
+│   │   │   ├── createCylinderOutlineGeometry.js
+│   │   │   ├── createEllipseGeometry.js
+│   │   │   ├── createEllipseOutlineGeometry.js
+│   │   │   ├── createEllipsoidGeometry.js
+│   │   │   ├── createEllipsoidOutlineGeometry.js
+│   │   │   ├── createFrustumGeometry.js
+│   │   │   ├── createFrustumOutlineGeometry.js
+│   │   │   ├── createGeometry.js
+│   │   │   ├── createGroundPolylineGeometry.js
+│   │   │   ├── createPlaneGeometry.js
+│   │   │   ├── createPlaneOutlineGeometry.js
+│   │   │   ├── createPolygonGeometry.js
+│   │   │   ├── createPolygonOutlineGeometry.js
+│   │   │   ├── createPolylineGeometry.js
+│   │   │   ├── createPolylineVolumeGeometry.js
+│   │   │   ├── createPolylineVolumeOutlineGeometry.js
+│   │   │   ├── createRectangleGeometry.js
+│   │   │   ├── createRectangleOutlineGeometry.js
+│   │   │   ├── createSimplePolylineGeometry.js
+│   │   │   ├── createSphereGeometry.js
+│   │   │   ├── createSphereOutlineGeometry.js
+│   │   │   ├── createTaskProcessorWorker.js
+│   │   │   ├── createVectorTileClampedPolylines.js
+│   │   │   ├── createVectorTileGeometries.js
+│   │   │   ├── createVectorTilePoints.js
+│   │   │   ├── createVectorTilePolygons.js
+│   │   │   ├── createVectorTilePolylines.js
+│   │   │   ├── createVerticesFromGoogleEarthEnterpriseBuffer.js
+│   │   │   ├── createVerticesFromHeightmap.js
+│   │   │   ├── createVerticesFromQuantizedTerrainMesh.js
+│   │   │   ├── createWallGeometry.js
+│   │   │   ├── createWallOutlineGeometry.js
+│   │   │   ├── decodeDraco.js
+│   │   │   ├── decodeGoogleEarthEnterprisePacket.js
+│   │   │   ├── decodeI3S.js
+│   │   │   ├── defaultValue-f6d5e6da.js
+│   │   │   ├── package.js
+│   │   │   ├── transcodeKTX2.js
+│   │   │   ├── transferTypedArrayTest.js
+│   │   │   └── upsampleQuantizedTerrainMesh.js
+│   │   ├── index.cjs
+│   │   └── index.js
+│   ├── assets
+│   │   ├── cloud.png
+│   │   ├── cloud.svg
+│   │   ├── earth-clouds.png
+│   │   ├── earth-map.jpg
+│   │   ├── earth-night.jpg
+│   │   ├── earth-normal-map.jpg
+│   │   ├── earth-specular-map.jpg
+│   │   ├── pin-blue.png
+│   │   ├── pin-blue.svg
+│   │   ├── pin-red.png
+│   │   └── pin-red.svg
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── scripts
+│   └── setup-globe-assets.js
+├── src
+│   ├── app
+│   │   ├── admin
+│   │   │   ├── groups
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── api
+│   │   │   ├── auth
+│   │   │   ├── chatbot
+│   │   │   ├── groups
+│   │   │   └── messages
+│   │   ├── archives
+│   │   │   ├── [id]
+│   │   │   └── page.tsx
+│   │   ├── contact
+│   │   │   └── page.tsx
+│   │   ├── dashboard
+│   │   │   └── page.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── groups
+│   │   │   └── register
+│   │   ├── layout.tsx
+│   │   ├── locator
+│   │   │   └── page.tsx
+│   │   ├── messages
+│   │   │   ├── [conversationId]
+│   │   │   └── page.tsx
+│   │   ├── page.tsx
+│   │   ├── profile
+│   │   │   └── page.tsx
+│   │   └── who-we-are
+│   │       └── page.tsx
+│   ├── components
+│   │   ├── auth
+│   │   │   ├── AuthButton.tsx
+│   │   │   ├── AuthUI.tsx
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── RegisterForm.tsx
+│   │   ├── chatbot
+│   │   │   └── ChatbotWidget.tsx
+│   │   ├── common
+│   │   │   ├── Footer.tsx
+│   │   │   ├── Header.tsx
+│   │   │   └── Navigation.tsx
+│   │   ├── examples
+│   │   │   ├── EnhancedGlobeDemo.tsx
+│   │   │   └── GlobeDemo.tsx
+│   │   ├── globe
+│   │   │   ├── AuroraEntity.tsx
+│   │   │   ├── CameraController.tsx
+│   │   │   ├── EnhancedRealisticGlobe.tsx
+│   │   │   ├── GlobeController.tsx
+│   │   │   ├── GlobeControls.tsx
+│   │   │   ├── GlobeExample.tsx
+│   │   │   ├── GlobeOptimizer.tsx
+│   │   │   ├── GlobeUtils.ts
+│   │   │   ├── GroupMarkers.tsx
+│   │   │   ├── MovingSatellites.tsx
+│   │   │   ├── RealisticGlobe.tsx
+│   │   │   ├── RealisticGlobePerformance.tsx
+│   │   │   ├── SunLight.tsx
+│   │   │   ├── WeatherEffects.tsx
+│   │   │   └── index.ts
+│   │   ├── groups
+│   │   │   ├── GroupCard.tsx
+│   │   │   ├── GroupForm.tsx
+│   │   │   └── GroupSearch.tsx
+│   │   ├── location
+│   │   │   └── LocationSearch.tsx
+│   │   ├── map
+│   │   │   └── LocationMap.tsx
+│   │   └── messages
+│   │       ├── ConversationList.tsx
+│   │       ├── MessageBubble.tsx
+│   │       └── MessageForm.tsx
+│   ├── lib
+│   │   ├── hooks
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useGroups.ts
+│   │   │   └── useMessages.ts
+│   │   ├── stores
+│   │   │   ├── authStore.ts
+│   │   │   ├── chatbotStore.ts
+│   │   │   └── groupsStore.ts
+│   │   ├── supabase
+│   │   │   ├── client.ts
+│   │   │   └── server.ts
+│   │   ├── types
+│   │   │   ├── database.types.ts
+│   │   │   └── index.ts
+│   │   └── utils
+│   │       ├── geocodingService.ts
+│   │       ├── helpers.ts
+│   │       ├── storage.ts
+│   │       └── validation.ts
+│   ├── styles
+│   │   └── globals.css
+│   └── types
+│       ├── resium.d.ts
+│       ├── supabase-ssr.d.ts
+│       └── supabase.d.ts
+├── tailwind.config.js
+├── tsconfig.json
+└── tsconfig.tsbuildinfo
+
+99 directories, 278 files
