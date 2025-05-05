@@ -45,8 +45,8 @@ const exampleGroups = [
 ];
 
 // Dynamically import the globe component with no SSR
-const EnhancedGlobe = dynamic(
-  () => import('@/components/globe/EnhancedRealisticGlobe').then(mod => mod.default as React.ComponentType<any>),
+const GlobalRealisticGlobe = dynamic(
+  () => import('@/components/globe/GlobalRealisticGlobe').then(mod => mod.default),
   { 
     ssr: false,
     loading: () => (
@@ -137,7 +137,7 @@ export default function Home() {
                 </div>
               </div>
             }>
-              <EnhancedGlobe 
+              <GlobalRealisticGlobe 
                 height="100vh"
                 width="100%"
                 groups={exampleGroups}
@@ -145,6 +145,7 @@ export default function Home() {
                 onGroupSelect={handleGroupSelect}
                 initialCoordinates={userLocation}
                 autoRotate={!selectedGroupId} // Stop rotation when a group is selected
+                performanceLevel="high"
               />
             </Suspense>
           </ErrorBoundary>

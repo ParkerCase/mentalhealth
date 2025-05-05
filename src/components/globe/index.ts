@@ -1,5 +1,5 @@
 // Export the main Globe component for default usage
-export { default as GlobeComponent } from './RealisticGlobePerformance';
+export { default as GlobeComponent } from './GlobalRealisticGlobe';
 
 // Optional: Export individual reusable components
 export { default as CameraController } from './CameraController';
