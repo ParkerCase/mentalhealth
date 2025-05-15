@@ -61,13 +61,20 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-      <div className="hidden lg:block relative w-0 flex-1 bg-blue-800">
-        <div className="flex flex-col justify-center items-center h-full text-white px-8">
+      <div
+  className="hidden lg:block relative w-0 flex-1 bg-cover bg-center"
+  style={{ backgroundImage: "url('/assets/lion-for-site.jpg')" }}
+>
+  {/* Overlay */}
+  <div className="absolute inset-0 bg-black bg-opacity-50 z-10"></div>
+
+  {/* Content on top of background + overlay */}
+  <div className="relative z-20 flex flex-col justify-center items-center h-full text-white px-8">
           <h1 className="text-4xl font-bold mb-6">Join Our Community</h1>
           <p className="text-xl mb-8 text-center">Create an account to connect with support groups and find resources tailored to your needs.</p>
           <div className="bg-white/20 p-6 rounded-lg backdrop-blur-md max-w-md">
-            <p className="text-lg">&quot;The connections I&apos;ve made through this platform have provided me with invaluable support during difficult times.&quot;</p>
-            <p className="mt-4 font-semibold">— Michael R., Community Member</p>
+            <p className="text-lg">&quot;Finding the right community changed my life. I realized I wasn't alone as I felt once I began my journey.&quot;</p>
+            <p className="mt-4 font-semibold">— Parker C., Community Member</p>
           </div>
         </div>
       </div>

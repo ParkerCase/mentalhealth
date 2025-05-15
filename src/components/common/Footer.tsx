@@ -5,9 +5,9 @@ export default function Footer() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
-              <h3 className="text-xl font-light tracking-wider mb-6">Social<span className="font-semibold">Connect</span></h3>
+              <h3 className="text-xl font-light tracking-wider mb-6">AriseDivineMasculine</h3>
               <p className="text-gray-400 font-light tracking-wide mb-6">
-                Connecting people to community support groups since 2025.
+                Connecting people to community support groups since 2023.(need clarification)
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
@@ -50,8 +50,8 @@ export default function Footer() {
               <p className="text-gray-400 font-light mb-2">
                 Have questions?
               </p>
-              <a href="mailto:contact@socialconnection.com" className="text-blue-400 hover:text-blue-300">
-                contact@socialconnection.com
+              <a href="mailto:info@arisedivinemasculine.com" className="text-blue-400 hover:text-blue-300">
+                info@arisedivinemasculine.com
               </a>
             </div>
           </div>
@@ -59,7 +59,7 @@ export default function Footer() {
           <div className="mt-16 pt-8 border-t border-gray-800">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-400 text-sm mb-4 md:mb-0">
-                © 2025 SocialConnect. All rights reserved.
+                © 2025 AriseDivineMasculine. All rights reserved.
               </p>
               <div className="flex space-x-6 text-sm">
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>

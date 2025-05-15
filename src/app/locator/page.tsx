@@ -407,7 +407,7 @@ export default function Locator() {
             <div className="bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-sm">
               <h3 className="text-2xl font-light mb-4">Why Join a Group?</h3>
               <p className="text-gray-300 mb-6">
-                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life's challenges.
+                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life's numerous challenges.
               </p>
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-start">

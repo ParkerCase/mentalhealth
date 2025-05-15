@@ -50,7 +50,7 @@ export default function Header() {
         <div className="flex justify-between items-center">
           <div>
             <Link href="/" className="text-2xl font-light tracking-wider text-white">
-              Social<span className="font-bold">Connect</span>
+              AriseDivineMasculine
             </Link>
           </div>
           

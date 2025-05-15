@@ -177,7 +177,7 @@ export default function Home() {
         <div className="container relative mx-auto px-6 z-10">
           <div className="max-w-3xl">
             <h1 className="text-7xl font-extralight tracking-tight mb-6">
-              <span className="block opacity-90">connection</span>
+              <span className="block opacity-90">Arise Divine Masculine</span>
               <span className="block text-sm uppercase tracking-[0.2em] mt-3 mb-8 font-light">
                 Find your community, wherever you are
               </span>
@@ -245,7 +245,7 @@ export default function Home() {
               <div className="w-16 h-16 flex items-center justify-center border border-white/10 rounded-sm mb-6">
                 <span className="text-2xl font-light">03</span>
               </div>
-              <h3 className="text-xl font-light mb-4 tracking-wide">Join</h3>
+              <h3 className="text-xl font-light mb-4 tracking-wide">The Journey</h3>
               <p className="text-gray-400 font-light">
                 Attend meetings, participate in events, and become part of a supportive community.
               </p>
@@ -263,16 +263,16 @@ export default function Home() {
             <div className="bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-sm">
               <h3 className="text-2xl font-light mb-4">Find Your Community</h3>
               <p className="text-gray-300 mb-6">
-                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life's challenges.
+                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life's many challenges.
               </p>
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-start">
                   <div className="text-blue-400 mr-2 mt-1">•</div>
-                  <span>Connect with people who understand your journey</span>
+                  <span>Connect with people who resonate with your journey</span>
                 </li>
                 <li className="flex items-start">
                   <div className="text-blue-400 mr-2 mt-1">•</div>
-                  <span>Share experiences in a supportive environment</span>
+                  <span>Share your stories and experiences in a supportive environment</span>
                 </li>
                 <li className="flex items-start">
                   <div className="text-blue-400 mr-2 mt-1">•</div>

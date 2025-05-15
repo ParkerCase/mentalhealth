@@ -206,7 +206,7 @@ export default function Archives() {
           <div className="lg:col-span-1">
             {/* Categories */}
             <div className="bg-white shadow-md rounded-lg p-4 mb-6">
-              <h3 className="text-lg font-semibold mb-3">Categories</h3>
+              <h3 style={{color: "#374151 "}}  className="text-lg font-semibold mb-3">Categories</h3>
               <div className="space-y-2">
                 {categories.length > 0 ? (
                   categories.map((category) => (
@@ -238,7 +238,7 @@ export default function Archives() {
 
             {/* Popular Resources */}
             <div className="bg-white shadow-md rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-3">Popular Resources</h3>
+              <h3 style={{color: "#374151 "}} className="text-lg font-semibold mb-3">Popular Resources</h3>
               <ul className="space-y-4">
                 <li>
                   <a

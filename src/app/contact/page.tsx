@@ -117,7 +117,7 @@ export default function ContactPage() {
               )}
               
               <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-4">Send Us a Message</h2>
+                <h2 style={{color: "#374151 "}} className="text-xl font-semibold mb-4">Send Us a Message</h2>
                 <p className="text-gray-600 mb-4">
                   Have a question, feedback, or need assistance? Fill out the form below and we'll get back to you as soon as possible.
                 </p>
@@ -129,6 +129,8 @@ export default function ContactPage() {
                     Your Name *
                   </label>
                   <input
+                                    style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
+
                     type="text"
                     id="name"
                     name="name"
@@ -144,6 +146,7 @@ export default function ContactPage() {
                     Your Email *
                   </label>
                   <input
+                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                     type="email"
                     id="email"
                     name="email"
@@ -160,6 +163,8 @@ export default function ContactPage() {
                   Subject
                 </label>
                 <input
+                                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
+
                   type="text"
                   id="subject"
                   name="subject"
@@ -174,6 +179,8 @@ export default function ContactPage() {
                   Message *
                 </label>
                 <textarea
+                                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
+
                   id="message"
                   name="message"
                   value={formData.message}
@@ -199,7 +206,7 @@ export default function ContactPage() {
         
         <div className="md:col-span-1">
           <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
+            <h2 style={{color: "#374151 "}} className="text-xl font-semibold mb-4">Contact Information</h2>
             <div className="space-y-4">
               <div className="flex items-start">
                 <div className="flex-shrink-0 mt-1">
@@ -210,8 +217,8 @@ export default function ContactPage() {
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-gray-900">Email</h3>
                   <p className="mt-1 text-sm text-gray-600">
-                    <a href="mailto:contact@socialconnection.com" className="text-blue-600 hover:underline">
-                      contact@socialconnection.com
+                    <a href="mailto:info@arisedivinemasculine.com" className="text-blue-600 hover:underline">
+                      info@arisedivinemasculine.com
                     </a>
                   </p>
                 </div>
@@ -226,8 +233,8 @@ export default function ContactPage() {
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-gray-900">Phone</h3>
                   <p className="mt-1 text-sm text-gray-600">
-                    <a href="tel:+1-555-123-4567" className="text-blue-600 hover:underline">
-                      +1 (555) 123-4567
+                    <a href="tel:+1-555-867-5309" className="text-blue-600 hover:underline">
+                      +1 (555) 867-5309
                     </a>
                   </p>
                 </div>
@@ -243,9 +250,9 @@ export default function ContactPage() {
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-gray-900">Address</h3>
                   <p className="mt-1 text-sm text-gray-600">
-                    123 Community Lane<br />
+                    123 Salt Lake City Blvd<br />
                     Suite 101<br />
-                    San Francisco, CA 94107
+                    Holladay, UT 84117
                   </p>
                 </div>
               </div>
@@ -253,7 +260,7 @@ export default function ContactPage() {
           </div>
           
           <div className="bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Connect With Us</h2>
+            <h2 style={{color: "#374151 "}} className="text-xl font-semibold mb-4">Connect With Us</h2>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-blue-600">
                 <span className="sr-only">Facebook</span>

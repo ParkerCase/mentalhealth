@@ -145,9 +145,9 @@ export default function RegisterGroup() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Register Your Group</h1>
+      <h1  className="text-3xl font-bold mb-6">Register Your Group</h1>
       
-      <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+      <div style={{color: "#374151"}} className="bg-white shadow-md rounded-lg p-6 mb-8">
         <p className="mb-4">
           Thank you for your interest in registering your group with our platform. By registering, 
           you'll help others find the support they need in their community.
@@ -156,7 +156,7 @@ export default function RegisterGroup() {
           All submissions will be reviewed by our team before being published. This process typically 
           takes 1-2 business days.
         </p>
-        <h2 className="text-xl font-semibold mb-3">Guidelines:</h2>
+        <h2 style={{color: "#374151"}} className="text-xl font-semibold mb-3">Guidelines:</h2>
         <ul className="list-disc pl-5 mb-4">
           <li className="mb-2">Provide accurate and up-to-date information about your group</li>
           <li className="mb-2">Include clear contact information for interested individuals</li>
@@ -199,13 +199,14 @@ export default function RegisterGroup() {
       
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Group Information</h2>
+          <h2 style={{color: "#374151"}} className="text-xl font-semibold mb-4">Group Information</h2>
           <div className="grid grid-cols-1 gap-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Group Name*
               </label>
               <input
+              style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                 type="text"
                 id="name"
                 name="name"
@@ -221,6 +222,7 @@ export default function RegisterGroup() {
                 Description*
               </label>
               <textarea
+              style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                 id="description"
                 name="description"
                 value={formData.description}
@@ -237,6 +239,7 @@ export default function RegisterGroup() {
                 Address
               </label>
               <input
+              style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                 type="text"
                 id="address"
                 name="address"
@@ -252,6 +255,7 @@ export default function RegisterGroup() {
                   City*
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="text"
                   id="city"
                   name="city"
@@ -267,6 +271,7 @@ export default function RegisterGroup() {
                   State*
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="text"
                   id="state"
                   name="state"
@@ -282,6 +287,7 @@ export default function RegisterGroup() {
                   ZIP Code*
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="text"
                   id="zip"
                   name="zip"
@@ -298,6 +304,7 @@ export default function RegisterGroup() {
                 Website
               </label>
               <input
+              style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                 type="url"
                 id="website"
                 name="website"
@@ -314,6 +321,7 @@ export default function RegisterGroup() {
                   Group Email*
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="email"
                   id="email"
                   name="email"
@@ -329,6 +337,7 @@ export default function RegisterGroup() {
                   Group Phone Number
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="tel"
                   id="phone"
                   name="phone"
@@ -343,7 +352,7 @@ export default function RegisterGroup() {
         
         {!user && (
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Group Leader Information</h2>
+            <h2 style={{color: "#374151"}} className="text-xl font-semibold mb-4">Group Leader Information</h2>
             <p className="mb-4 text-sm text-gray-500">
               Since you're not logged in, please provide your contact information as the group leader.
             </p>
@@ -353,6 +362,7 @@ export default function RegisterGroup() {
                   First Name*
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="text"
                   id="leaderFirstName"
                   name="leaderFirstName"
@@ -368,6 +378,7 @@ export default function RegisterGroup() {
                   Last Name*
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="text"
                   id="leaderLastName"
                   name="leaderLastName"
@@ -383,6 +394,7 @@ export default function RegisterGroup() {
                   Email*
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="email"
                   id="leaderEmail"
                   name="leaderEmail"
@@ -398,6 +410,7 @@ export default function RegisterGroup() {
                   Phone Number*
                 </label>
                 <input
+                style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
                   type="tel"
                   id="leaderPhone"
                   name="leaderPhone"
@@ -415,6 +428,7 @@ export default function RegisterGroup() {
           <div className="flex items-start">
             <div className="flex items-center h-5">
               <input
+              style={{backgroundColor: "#fff", color: "#fff"}}
                 id="agreeToTerms"
                 name="agreeToTerms"
                 type="checkbox"

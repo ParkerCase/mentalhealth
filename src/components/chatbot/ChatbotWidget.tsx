@@ -128,6 +128,7 @@ export default function ChatbotWidget() {
           <form onSubmit={handleSubmit} className="border-t border-gray-200 p-2">
             <div className="flex">
               <input
+              style={{ backgroundColor: '#fff' }}
                 type="text"
                 value={input}
                 onChange={handleInputChange}

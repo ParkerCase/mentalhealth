@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+// Add this near the top of your component with other useRef declarations
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
@@ -40,11 +41,14 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
   const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
   const animationRef = useRef<number | null>(null);
   const earthRotationSpeed = useRef(0.02); // degrees per frame
+  const earthRotationAngle = useRef(0);
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
     
     let isInitialized = false;
+
+
     
     const createViewer = () => {
       try {
@@ -96,6 +100,8 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
           scene.skyAtmosphere.saturationShift = 0.3; // Increased saturation for more vibrant colors
           scene.skyAtmosphere.brightnessShift = 0.2; // Increased brightness for better daylight appearance
         }
+
+        
         
         // Add custom imagery layers
         try {
@@ -131,11 +137,7 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
           // Enhanced day/night cycle based on earth rotation
           viewer.clock.onTick.addEventListener(() => {
             if (nightLayer && baseLayer) {
-              // Use the earth's rotation to determine day/night
-              const earthRotation = viewer.scene.globe.ellipsoid.modelMatrix;
-              const rotationAngle = Cesium.Matrix4.getRotation(earthRotation, new Cesium.Matrix3());
-              
-              // Simple simulation based on rotation
+              // Use the tracked rotation angle to determine day/night
               const seconds = Date.now() / 1000;
               const rotationPhase = (seconds * 0.01) % (Math.PI * 2);
               
@@ -266,18 +268,15 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
   }, [autoRotate, selectedGroupId]);
 
   const setupEarthRotation = (viewer: Cesium.Viewer) => {
-    // Create rotation matrix for the earth
-    const rotationMatrix = Cesium.Matrix3.IDENTITY.clone();
     let rotationAngle = 0;
     
     const tick = () => {
       if (!viewer.isDestroyed()) {
-        // Create rotation around the z-axis (earth's rotation axis)
+        // Rotate the camera around the globe
         rotationAngle += Cesium.Math.toRadians(earthRotationSpeed.current);
-        const rotationMatrix3 = Cesium.Matrix3.fromRotationZ(rotationAngle);
+        earthRotationAngle.current = rotationAngle; // Track the rotation
         
-        // Update earth's orientation
-        viewer.scene.globe.ellipsoid.modelMatrix = Cesium.Matrix4.fromRotationTranslation(rotationMatrix3);
+        viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Cesium.Math.toRadians(earthRotationSpeed.current));
         
         animationRef.current = requestAnimationFrame(tick);
       }
