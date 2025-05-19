@@ -160,6 +160,40 @@ export default function Locator() {
       supabase.removeChannel(groupsSubscription);
     };
   }, [supabase, handleSearch, user]);
+
+  const transformGroupsForGlobe = (groups: Group[]): Array<{
+  id: string;
+  name: string;
+  description?: string | null;
+  geo_location?: {
+    type?: string;
+    coordinates: number[];
+  };
+  city?: string;
+  state?: string;
+  address?: string;
+  zip?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+}> => {
+  return groups.map(group => ({
+    id: group.id,
+    name: group.name,
+    description: group.description,
+    geo_location: group.geo_location ? {
+      type: group.geo_location.type,
+      coordinates: group.geo_location.coordinates as number[]
+    } : undefined,
+    city: group.city || undefined,
+    state: group.state || undefined,
+    address: group.address || undefined,
+    zip: group.zip || undefined,
+    phone: group.phone || undefined,
+    email: group.email || undefined,
+    website: group.website || undefined
+  }));
+};
   
   return (
     <div className="min-h-screen bg-[#292929] relative">
@@ -203,15 +237,15 @@ export default function Locator() {
       {/* Main Globe Visualization with Search */}
       <div className="container mx-auto px-4 pb-12">
         <GlobeWithSearch 
-          groups={groups}
-          onGroupSelect={handleGroupSelect}
-          onSearchSubmit={handleSearch}
-          initialCoordinates={selectedLocation ? 
-            { lat: selectedLocation.lat, lng: selectedLocation.lng } : 
-            undefined
-          }
-          height="70vh"
-          width="100%"
+groups={transformGroupsForGlobe(groups)}
+  onGroupSelect={handleGroupSelect}
+  onSearchSubmit={handleSearch}
+  initialCoordinates={selectedLocation ? 
+    { lat: selectedLocation.lat, lng: selectedLocation.lng } : 
+    undefined
+  }
+  height="70vh"
+  width="100%"
         />
         
         {/* Selected Group Details */}

@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { FaSpinner, FaList, FaGlobe, FaFilter, FaMapMarked, FaInfoCircle } from 'react-icons/fa';
+import { FaSpinner, FaList, FaGlobe, FaFilter, FaMapMarked, FaInfoCircle, FaMapMarkerAlt } from 'react-icons/fa';
 import type { GroupSearchParams, Group } from '@/lib/types';
 import type { GeocodingResult } from '@/lib/utils/geocodingService';
 import AdvancedLocationSearch from '../location/AdvancedLocationSearch';
@@ -412,24 +412,24 @@ const GlobeWithSearch: React.FC<GlobeWithSearchProps> = ({
       
       {/* Main Content Area - Globe or List View */}
       <div className="absolute inset-0 z-0">
-        {viewMode === 'globe' ? (
-          <GlobalRealisticGlobe
-            ref={globeRef}
-            height="100%"
-            width="100%"
-            groups={transformedGroups}
-            selectedGroupId={selectedGroupId}
-            onGroupSelect={handleGroupSelect}
-            initialCoordinates={selectedLocation ? 
-              { lat: selectedLocation.lat, lng: selectedLocation.lng } : 
-              initialCoordinates
-            }
-            autoRotate={!selectedGroupId && !selectedLocation}
-            performanceLevel={performanceLevel}
-            markerType="pulse"
-            weatherType="clear"
-          />
-        ) : (
+{viewMode === 'globe' ? (
+  <GlobalRealisticGlobe
+    ref={globeRef}
+    height="100%"
+    width="100%"
+    groups={transformedGroups}
+    selectedGroupId={selectedGroupId}
+    onGroupSelect={handleGroupSelect}
+    initialCoordinates={selectedLocation ? 
+      { lat: selectedLocation.lat, lng: selectedLocation.lng } : 
+      initialCoordinates
+    }
+    autoRotate={!selectedGroupId && !selectedLocation}
+    performanceLevel={performanceLevel}
+    markerType="pulse"
+    weatherType="clear"
+  />
+) : (
           <div className="h-full w-full bg-[#1e1e1e] overflow-y-auto p-4">
             <div className="max-w-4xl mx-auto mt-16">
               <h2 className="text-2xl font-light text-white mb-6">Groups List View</h2>

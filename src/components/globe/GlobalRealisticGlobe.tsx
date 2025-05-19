@@ -1,7 +1,6 @@
-// src/components/globe/GlobalRealisticGlobe.tsx
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
@@ -30,21 +29,24 @@ export interface GlobalRealisticGlobeProps {
   debugInfo?: boolean;
 }
 
-const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
-  height = '100vh',
-  width = '100%',
-  groups = [],
-  selectedGroupId,
-  onGroupSelect,
-  initialCoordinates,
-  autoRotate = true,
-  performanceLevel = 'medium',
-  weatherType = 'clear',
-  weatherIntensity = 0.5,
-  markerType = 'pulse',
-  showSatellites = false,
-  debugInfo = false
-}) => {
+// Export the component with forwardRef to properly handle refs from parent components
+const GlobalRealisticGlobe = forwardRef<any, GlobalRealisticGlobeProps>((props, ref) => {
+  const {
+    height = '100vh',
+    width = '100%',
+    groups = [],
+    selectedGroupId,
+    onGroupSelect,
+    initialCoordinates,
+    autoRotate = true,
+    performanceLevel = 'medium',
+    weatherType = 'clear',
+    weatherIntensity = 0.5,
+    markerType = 'pulse',
+    showSatellites = false,
+    debugInfo = false
+  } = props;
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
@@ -91,13 +93,15 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
     
     try {
       // Simple geocoding using Cesium's ion Geocoder service if available
-      if (Cesium.IonGeocoderService) {
-        const geocoder = new Cesium.IonGeocoderService({ scene: viewerRef.current.scene });
+      if ((Cesium as any).IonGeocoderService) {
+        const geocoder = new (Cesium as any).IonGeocoderService({ scene: viewerRef.current.scene });
         const results = await geocoder.geocode(searchText);
         
         if (results && results.length > 0) {
           const result = results[0];
-          flyToLocation(result.position.y, result.position.x, 2000000);
+          // Use type assertion for the position property
+          const pos = result.position as any;
+          flyToLocation(pos.y, pos.x, 2000000);
           return true;
         }
       }
@@ -135,7 +139,7 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
           timeline: false,
           navigationHelpButton: false,
           creditContainer: credits,
-          imageryProvider: false,
+          // Use baseLayerPicker: false instead of imageryProvider: false
           terrainProvider: new Cesium.EllipsoidTerrainProvider(),
           requestRenderMode: performanceLevel !== 'ultra',
           maximumRenderTimeChange: performanceLevel === 'ultra' ? 0 : Infinity,
@@ -148,8 +152,8 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
         
         // Configure viewer basics
         scene.backgroundColor = Cesium.Color.BLACK;
-        scene.moon = undefined; // Remove default moon
-        scene.sun = undefined; // Remove default sun (we'll create our own)
+        scene.moon = undefined as any; // Remove default moon
+        scene.sun = undefined as any; // Remove default sun (we'll create our own)
         
         // Enhanced day/night cycle settings
         globe.enableLighting = true;
@@ -157,10 +161,7 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
         globe.showGroundAtmosphere = true;
         
         // Create enhanced sun
-        const customSun = new Cesium.Sun({
-          glowFactor: 2.0,
-          size: 30
-        });
+const customSun = new Cesium.Sun();
         scene.sun = customSun;
         
         // Enhanced atmosphere
@@ -184,10 +185,10 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
         // Add custom imagery layers
         try {
           // 1. Base earth texture with higher resolution
-          const baseImagery = new Cesium.SingleTileImageryProvider({
-            url: '/assets/earth-map-hd.jpg', // Higher resolution earth texture
-            rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0)
-          });
+ const baseImagery = new Cesium.SingleTileImageryProvider({
+  url: '/assets/earth-map.jpg', // Higher resolution earth texture
+  rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0)
+});
           
           const baseLayer = viewer.imageryLayers.addImageryProvider(baseImagery);
           baseLayer.brightness = 1.2; // Brighter for daytime
@@ -196,7 +197,7 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
           
           // 2. Enhanced night lights with bright city centers
           const nightLights = new Cesium.SingleTileImageryProvider({
-            url: '/assets/earth-night-hd.jpg', // Higher resolution night lights
+            url: '/assets/earth-night.jpg', // Higher resolution night lights
             rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0)
           });
           
@@ -208,7 +209,7 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
           
           // 3. Enhanced cloud layer with transparency and detail
           const cloudProvider = new Cesium.SingleTileImageryProvider({
-            url: '/assets/earth-clouds-hd.png', // Higher resolution clouds with transparency
+            url: '/assets/earth-clouds.png', // Higher resolution clouds with transparency
             rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0)
           });
           
@@ -286,8 +287,8 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
         } catch (error) {
           console.error('Error setting up custom imagery:', error);
           // Fallback to default imagery if custom textures fail
-          const defaultProvider = new Cesium.TileMapServiceImageryProvider({
-            url: Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
+          const defaultProvider = new Cesium.UrlTemplateImageryProvider({
+            url: Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII/{z}/{x}/{y}.jpg')
           });
           viewer.imageryLayers.addImageryProvider(defaultProvider);
         }
@@ -637,7 +638,7 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
             const z = orbitRadius * Math.sin(currentAngle) * Math.sin(inclination);
             
             return new Cesium.Cartesian3(x, y, z);
-          }, false),
+          }, false) as any,
           
           // Satellite appearance
           point: {
@@ -666,6 +667,7 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
       }
     }
   };
+  
   
   // Add weather effects based on type and intensity
   const addWeatherEffects = (viewer: Cesium.Viewer, type: string, intensity: number) => {
@@ -841,7 +843,7 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
     }
   };
 
-  const setupPerformanceSettings = (viewer: Cesium.Viewer, level: string) => {
+   const setupPerformanceSettings = (viewer: Cesium.Viewer, level: string) => {
     const scene = viewer.scene;
     const globe = scene.globe;
     
@@ -850,7 +852,8 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
         scene.fog.enabled = false;
         scene.skyAtmosphere.show = false;
         globe.enableLighting = false;
-        scene.fxaa = false;
+        // Fix fxaa property access
+        (scene as any).fxaa = false;
         scene.postProcessStages.fxaa.enabled = false;
         globe.maximumScreenSpaceError = 4;
         globe.tileCacheSize = 100;
@@ -862,7 +865,8 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
         scene.fog.enabled = true;
         scene.skyAtmosphere.show = true;
         globe.enableLighting = true;
-        scene.fxaa = true;
+        // Fix fxaa property access
+        (scene as any).fxaa = true;
         if (scene.postProcessStages?.fxaa) {
           scene.postProcessStages.fxaa.enabled = true;
         }
@@ -877,7 +881,8 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
         globe.enableLighting = true;
         globe.dynamicAtmosphereLighting = true;
         globe.dynamicAtmosphereLightingFromSun = true;
-        scene.fxaa = true;
+        // Fix fxaa property access
+        (scene as any).fxaa = true;
         if (scene.postProcessStages?.fxaa) {
           scene.postProcessStages.fxaa.enabled = true;
         }
@@ -891,7 +896,8 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
         scene.fog.enabled = true;
         scene.skyAtmosphere.show = true;
         globe.enableLighting = true;
-        scene.fxaa = false;
+        // Fix fxaa property access
+        (scene as any).fxaa = false;
         if (scene.postProcessStages?.fxaa) {
           scene.postProcessStages.fxaa.enabled = false;
         }
@@ -904,15 +910,11 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
   };
 
   // Expose search and flyTo functions to parent via ref
-  React.useImperativeHandle(
-    // @ts-ignore - ignore the fact that ref is not defined in props
-    ref,
-    () => ({
-      flyToLocation,
-      searchLocation,
-      viewer: viewerRef.current
-    })
-  );
+  useImperativeHandle(ref, () => ({
+    flyToLocation,
+    searchLocation,
+    viewer: viewerRef.current
+  }), [flyToLocation, searchLocation, viewerRef.current]);
 
   return (
     <div style={{ 
@@ -956,6 +958,9 @@ const GlobalRealisticGlobe: React.FC<GlobalRealisticGlobeProps> = ({
       )}
     </div>
   );
-};
+});
+
+// Add display name for better debugging
+GlobalRealisticGlobe.displayName = 'GlobalRealisticGlobe';
 
 export default GlobalRealisticGlobe;
