@@ -1,3 +1,4 @@
+// src/app/locator/page.tsx
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -5,21 +6,10 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { FaInfoCircle, FaSlack, FaSearch, FaPaperPlane, FaEdit, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe } from 'react-icons/fa'
-import dynamic from 'next/dynamic'
+import { FaInfoCircle, FaSlack, FaPaperPlane, FaEdit } from 'react-icons/fa'
 import { Group, GroupSearchParams } from '@/lib/types'
-import LocationSearch from '@/components/location/LocationSearch'
 import { GeocodingResult } from '@/lib/utils/geocodingService'
-
-// Dynamically import the Globe component with no SSR
-const GlobeComponent = dynamic(() => import('@/components/globe/index').then(mod => mod.GlobeComponent), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-[#292929] rounded-sm border border-white/10">
-      <div className="text-gray-400 animate-pulse tracking-wider">Loading globe...</div>
-    </div>
-  )
-});
+import GlobeWithSearch from '@/components/globe/GlobeWithSearch'
 
 export default function Locator() {
   const router = useRouter()
@@ -42,7 +32,6 @@ export default function Locator() {
     initialize()
   }, [initialize])
   
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setSearchParams({
@@ -148,294 +137,188 @@ export default function Locator() {
     
     router.push(`/messages/${newConversation.id}`)
   }
-
-  // Add this before the return statement in src/app/locator/page.tsx
-const transformedGroups = groups.map(group => ({
-  id: group.id,
-  name: group.name,
-  geo_location: group.geo_location ? {
-    type: group.geo_location.type,
-    coordinates: Array.isArray(group.geo_location.coordinates) 
-      ? group.geo_location.coordinates 
-      : []
-  } : undefined,
-  city: group.city || undefined,
-  state: group.state || undefined
-}));
-
-// Add this effect to update groups in real-time when they change
-useEffect(() => {
-  if (!user) return;
   
-  // Subscribe to group changes (new groups being approved)
-  const groupsSubscription = supabase
-    .channel('public:groups')
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'groups',
-      filter: 'approved=eq.true'
-    }, () => {
-      // Refresh the groups when changes occur
-      handleSearch();
-    })
-    .subscribe();
-  
-  return () => {
-    supabase.removeChannel(groupsSubscription);
-  };
-}, [supabase, handleSearch, user]);
+  // Add this effect to update groups in real-time when they change
+  useEffect(() => {
+    if (!user) return;
+    
+    // Subscribe to group changes (new groups being approved)
+    const groupsSubscription = supabase
+      .channel('public:groups')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'groups',
+        filter: 'approved=eq.true'
+      }, () => {
+        // Refresh the groups when changes occur
+        handleSearch();
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(groupsSubscription);
+    };
+  }, [supabase, handleSearch, user]);
   
   return (
     <div className="min-h-screen bg-[#292929] relative">
-      {/* Add the globe as a background with absolute positioning */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-      <GlobeComponent 
-  groups={transformedGroups} 
-  onGroupSelect={handleGroupSelect}
-  selectedGroupId={selectedGroup?.id}
-  initialCoordinates={selectedLocation ? {
-    lat: selectedLocation.lat,
-    lng: selectedLocation.lng
-  } : undefined}
-  height="100%"
-  width="100%"
-/>
-      </div>
-      
-      {/* Content overlay with relative positioning and higher z-index */}
-      <div className="relative z-10">
-        <div className="container mx-auto px-6 py-16 pt-32">
-          <h1 className="text-5xl font-light tracking-wide mb-12 text-white"><span className="font-normal">Find</span> Groups</h1>
-          
-          {requiresLogin && (
-            <div className="bg-[#4A3E33] border-l-2 border-[#FFD700] p-4 mb-8 rounded-sm backdrop-blur-sm bg-opacity-80">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <FaInfoCircle className="text-[#FFD700] mt-1" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-white/80">
-                    You need to be logged in to search for groups. {' '}
-                    <Link href="/api/auth/login" className="text-blue-400 hover:text-blue-300 underline">
-                      Login
-                    </Link> or {' '}
-                    <Link href="/api/auth/register" className="text-blue-400 hover:text-blue-300 underline">
-                      Register
-                    </Link> to continue.
-                  </p>
-                </div>
-              </div>
+      {/* Login notification panel */}
+      {requiresLogin && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#4A3E33] border-l-2 border-[#FFD700] p-4 rounded-sm backdrop-blur-sm shadow-lg w-full max-w-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FaInfoCircle className="text-[#FFD700] mt-1" />
             </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-1">
-              <div className="card border border-white/5 backdrop-blur-md bg-black/40">
-                <h2 className="text-xl font-light tracking-wide mb-6">Search Filters</h2>
-                
-                <LocationSearch 
-                  onLocationSelect={handleLocationSelect}
-                  onSearch={handleSearch}
-                  className="mb-6"
-                />
-                
-                <form onSubmit={(e) => {
-                  e.preventDefault()
-                  handleSearch()
-                }}>
-                  <div className="mb-6">
-                    <label htmlFor="city" className="form-label">
-                      City
-                    </label>
-                    <input
-                      type="text"
-                      id="city"
-                      name="city"
-                      value={searchParams.city}
-                      onChange={handleChange}
-                      className="form-input bg-[#3a3a3a]"
-                      placeholder="Enter city name"
-                    />
-                  </div>
-                  
-                  <div className="mb-6">
-                    <label htmlFor="state" className="form-label">
-                      State
-                    </label>
-                    <input
-                      type="text"
-                      id="state"
-                      name="state"
-                      value={searchParams.state}
-                      onChange={handleChange}
-                      className="form-input bg-[#3a3a3a]"
-                      placeholder="Enter state"
-                    />
-                  </div>
-                  
-                  <div className="mb-8">
-                    <label htmlFor="keywords" className="form-label">
-                      Keywords
-                    </label>
-                    <input
-                      type="text"
-                      id="keywords"
-                      name="keywords"
-                      value={searchParams.keywords}
-                      onChange={handleChange}
-                      className="form-input bg-[#3a3a3a]"
-                      placeholder="Search by name or description"
-                    />
-                  </div>
-                  
-                  <button
-                    type="submit"
-                    disabled={isSearching || loading}
-                    className="btn-primary w-full"
-                  >
-                    {isSearching ? (
-                      <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Searching...
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center">
-                        Search Groups
-                      </span>
-                    )}
-                  </button>
-                </form>
-              </div>
-            </div>
-            
-            <div className="md:col-span-2">
-              {searchPerformed ? (
-                groups.length > 0 ? (
-                  <div className="space-y-8">
-                    <div className="card border border-white/5 backdrop-blur-md bg-black/40 p-0 overflow-hidden h-96">
-                      {/* Globe is now in the background, this is just a placeholder for the layout */}
-                      <div className="w-full h-full"></div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-light tracking-wide">Found <span className="font-normal">{groups.length}</span> groups</h2>
-                      
-                      <div className="text-sm text-gray-400">
-                        Showing all results
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-6">
-                      {groups.map((group) => (
-                        <div 
-                          key={group.id} 
-                          className={`card border ${selectedGroup?.id === group.id 
-                            ? 'border-blue-500/50 shadow-lg shadow-blue-500/20' 
-                            : 'border-white/5'} 
-                          backdrop-blur-md bg-black/40 hover:border-white/10 transition-all cursor-pointer`}
-                          onClick={() => handleGroupSelect(group)}
-                        >
-                          <div className="flex flex-col md:flex-row md:justify-between md:items-start">
-                            <div>
-                              <h3 className="text-xl font-light tracking-wide mb-2">{group.name}</h3>
-                              <p className="text-gray-400 mb-4 text-xs flex items-center">
-                                {[group.city, group.state].filter(Boolean).join(', ')}
-                              </p>
-                              <p className="text-gray-300 mb-6 text-sm font-light">
-                                {group.description?.length && group.description.length > 150
-                                  ? `${group.description.substring(0, 150)}...`
-                                  : group.description}
-                              </p>
-                            </div>
-                            
-                            <div className="mt-4 md:mt-0 flex flex-col space-y-3">
-                              <button
-                                onClick={() => sendMessage(group.id)}
-                                className="btn-primary"
-                              >
-                                Contact Group
-                              </button>
-                              
-                              <button
-                                className="btn-secondary"
-                                onClick={() => {
-                                  if (selectedLocation) {
-                                    // Focus on the selected group
-                                    setSelectedGroup(group)
-                                  }
-                                }}
-                              >
-                                View Details
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="card border border-white/5 backdrop-blur-md bg-black/40 text-center p-12">
-                    <div className="flex justify-center mb-6">
-                      <div className="w-16 h-16 rounded-full bg-[#3a3a3a] flex items-center justify-center">
-                        <FaSlack className="text-gray-400 text-2xl" />
-                      </div>
-                    </div>
-                    <h2 className="text-xl font-light tracking-wide mb-3">No groups found</h2>
-                    <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                      We couldn&apos;t find any groups matching your search criteria. Try adjusting your filters or consider registering a new group.
-                    </p>
-                    <Link
-                      href="/groups/register"
-                      className="btn-primary inline-block"
-                    >
-                      Register a Group
-                    </Link>
-                  </div>
-                )
-              ) : (
-                <div className="card border border-white/5 backdrop-blur-md bg-black/40 text-center p-12">
-                  <div className="flex justify-center mb-6">
-                    <div className="w-20 h-20 rounded-full bg-[#3a3a3a] flex items-center justify-center">
-                      <FaSlack className="text-gray-400 text-2xl" />
-                    </div>
-                  </div>
-                  <h2 className="text-2xl font-light tracking-wide mb-3">Find Your Community</h2>
-                  <p className="text-gray-400 mb-4 max-w-lg mx-auto">
-                    Use the search filters to find support groups and communities in your area. 
-                    You can search by location and keywords to find the perfect match for your needs.
-                  </p>
-                  <p className="text-gray-500 mb-8">
-                    Don&apos;t see what you&apos;re looking for? Consider {' '}
-                    <Link href="/groups/register" className="text-blue-400 hover:text-blue-300 hover:underline">
-                      registering your own group
-                    </Link>
-                    .
-                  </p>
-                  
-                  <div className="flex flex-col md:flex-row justify-center gap-4">
-                    <button
-                      onClick={() => handleSearch()}
-                      className="btn-primary"
-                    >
-                      Show All Groups
-                    </button>
-                    
-                    <Link
-                      href="/groups/register"
-                      className="btn-secondary"
-                    >
-                      Register a Group
-                    </Link>
-                  </div>
-                </div>
-              )}
+            <div className="ml-4">
+              <p className="text-sm text-white/80">
+                You need to be logged in to search for groups. {' '}
+                <Link href="/api/auth/login?redirectUrl=/locator" className="text-blue-400 hover:text-blue-300 underline">
+                  Login
+                </Link> or {' '}
+                <Link href="/api/auth/register?redirectUrl=/locator" className="text-blue-400 hover:text-blue-300 underline">
+                  Register
+                </Link> to continue.
+              </p>
+              <button 
+                className="mt-2 text-xs text-gray-300 hover:text-white"
+                onClick={() => setRequiresLogin(false)}
+              >
+                Dismiss
+              </button>
             </div>
           </div>
         </div>
+      )}
+      
+      <div className="container mx-auto px-4 py-12 pt-24">
+        <h1 className="text-5xl font-light tracking-wide mb-6 text-white">
+          <span className="font-normal">Find</span> Groups
+        </h1>
+        <p className="text-xl text-gray-300 mb-8 max-w-3xl">
+          Discover support groups and communities in your area. Connect with others on similar journeys.
+        </p>
+      </div>
+      
+      {/* Main Globe Visualization with Search */}
+      <div className="container mx-auto px-4 pb-12">
+        <GlobeWithSearch 
+          groups={groups}
+          onGroupSelect={handleGroupSelect}
+          onSearchSubmit={handleSearch}
+          initialCoordinates={selectedLocation ? 
+            { lat: selectedLocation.lat, lng: selectedLocation.lng } : 
+            undefined
+          }
+          height="70vh"
+          width="100%"
+        />
+        
+        {/* Selected Group Details */}
+        {selectedGroup && (
+          <div className="mt-8 bg-black/60 backdrop-blur-sm p-6 rounded-lg border border-gray-800">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start">
+              <div className="mb-6 md:mb-0 md:max-w-2xl">
+                <h2 className="text-2xl font-light text-white mb-3">{selectedGroup.name}</h2>
+                
+                <div className="text-gray-400 mb-4 text-sm">
+                  {[selectedGroup.address, selectedGroup.city, selectedGroup.state, selectedGroup.zip]
+                    .filter(Boolean)
+                    .join(', ')}
+                </div>
+                
+                <div className="text-gray-300 mb-6">
+                  {selectedGroup.description}
+                </div>
+                
+                <div className="flex flex-wrap gap-4">
+                  {selectedGroup.email && (
+                    <a 
+                      href={`mailto:${selectedGroup.email}`}
+                      className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
+                    >
+                      <span className="mr-1">✉️</span> {selectedGroup.email}
+                    </a>
+                  )}
+                  
+                  {selectedGroup.phone && (
+                    <a 
+                      href={`tel:${selectedGroup.phone}`}
+                      className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
+                    >
+                      <span className="mr-1">📞</span> {selectedGroup.phone}
+                    </a>
+                  )}
+                  
+                  {selectedGroup.website && (
+                    <a 
+                      href={selectedGroup.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
+                    >
+                      <span className="mr-1">🌐</span> Website
+                    </a>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex flex-col space-y-3 mt-4 md:mt-0">
+                <button
+                  onClick={() => sendMessage(selectedGroup.id)}
+                  className="btn-primary flex items-center justify-center"
+                  disabled={!user}
+                >
+                  <FaPaperPlane className="mr-2" /> Contact Group
+                </button>
+                
+                <button
+                  onClick={() => setSelectedGroup(null)}
+                  className="btn-secondary"
+                >
+                  Close Details
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* No search results yet message */}
+        {!searchPerformed && !isSearching && groups.length === 0 && (
+          <div className="mt-8 text-center p-12 bg-black/40 backdrop-blur-sm border border-white/5 rounded-lg">
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 rounded-full bg-[#3a3a3a] flex items-center justify-center">
+                <FaSlack className="text-gray-400 text-2xl" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-light tracking-wide mb-3">Discover Your Community</h2>
+            <p className="text-gray-400 mb-4 max-w-lg mx-auto">
+              Use the search or explore the globe to find support groups and communities that meet your needs.
+            </p>
+            <p className="text-gray-500 mb-8">
+              Don&apos;t see what you&apos;re looking for? Consider {' '}
+              <Link href="/groups/register" className="text-blue-400 hover:text-blue-300 hover:underline">
+                registering your own group
+              </Link>.
+            </p>
+            
+            <div className="flex flex-col md:flex-row justify-center gap-4">
+              <button
+                onClick={() => handleSearch({ city: '', state: '', keywords: '' })}
+                className="btn-primary"
+              >
+                Show All Groups
+              </button>
+              
+              <Link
+                href="/groups/register"
+                className="btn-secondary"
+              >
+                <FaEdit className="mr-2" /> Register a Group
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Bottom gradient section */}
@@ -476,7 +359,7 @@ useEffect(() => {
                 Our platform makes it easy to register and manage your group, connect with members, and grow your community.
               </p>
               <Link href="/groups/register" className="btn-primary inline-block">
-                Register a New Group
+                <FaEdit className="mr-2 inline" /> Register a New Group
               </Link>
             </div>
           </div>
