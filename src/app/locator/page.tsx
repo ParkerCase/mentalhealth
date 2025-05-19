@@ -41,6 +41,7 @@ export default function Locator() {
   useEffect(() => {
     initialize()
   }, [initialize])
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -147,22 +148,59 @@ export default function Locator() {
     
     router.push(`/messages/${newConversation.id}`)
   }
+
+  // Add this before the return statement in src/app/locator/page.tsx
+const transformedGroups = groups.map(group => ({
+  id: group.id,
+  name: group.name,
+  geo_location: group.geo_location ? {
+    type: group.geo_location.type,
+    coordinates: Array.isArray(group.geo_location.coordinates) 
+      ? group.geo_location.coordinates 
+      : []
+  } : undefined,
+  city: group.city || undefined,
+  state: group.state || undefined
+}));
+
+// Add this effect to update groups in real-time when they change
+useEffect(() => {
+  if (!user) return;
+  
+  // Subscribe to group changes (new groups being approved)
+  const groupsSubscription = supabase
+    .channel('public:groups')
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'groups',
+      filter: 'approved=eq.true'
+    }, () => {
+      // Refresh the groups when changes occur
+      handleSearch();
+    })
+    .subscribe();
+  
+  return () => {
+    supabase.removeChannel(groupsSubscription);
+  };
+}, [supabase, handleSearch, user]);
   
   return (
     <div className="min-h-screen bg-[#292929] relative">
       {/* Add the globe as a background with absolute positioning */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <GlobeComponent 
-          groups={groups} 
-          onGroupSelect={handleGroupSelect}
-          selectedGroupId={selectedGroup?.id}
-          initialCoordinates={selectedLocation ? {
-            lat: selectedLocation.lat,
-            lng: selectedLocation.lng
-          } : undefined}
-          height="100%"
-          width="100%"
-        />
+      <GlobeComponent 
+  groups={transformedGroups} 
+  onGroupSelect={handleGroupSelect}
+  selectedGroupId={selectedGroup?.id}
+  initialCoordinates={selectedLocation ? {
+    lat: selectedLocation.lat,
+    lng: selectedLocation.lng
+  } : undefined}
+  height="100%"
+  width="100%"
+/>
       </div>
       
       {/* Content overlay with relative positioning and higher z-index */}
@@ -348,7 +386,7 @@ export default function Locator() {
                     </div>
                     <h2 className="text-xl font-light tracking-wide mb-3">No groups found</h2>
                     <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                      We couldn't find any groups matching your search criteria. Try adjusting your filters or consider registering a new group.
+                      We couldn&apos;t find any groups matching your search criteria. Try adjusting your filters or consider registering a new group.
                     </p>
                     <Link
                       href="/groups/register"
@@ -371,7 +409,7 @@ export default function Locator() {
                     You can search by location and keywords to find the perfect match for your needs.
                   </p>
                   <p className="text-gray-500 mb-8">
-                    Don't see what you're looking for? Consider {' '}
+                    Don&apos;t see what you&apos;re looking for? Consider {' '}
                     <Link href="/groups/register" className="text-blue-400 hover:text-blue-300 hover:underline">
                       registering your own group
                     </Link>
@@ -407,7 +445,7 @@ export default function Locator() {
             <div className="bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-sm">
               <h3 className="text-2xl font-light mb-4">Why Join a Group?</h3>
               <p className="text-gray-300 mb-6">
-                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life's numerous challenges.
+                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life&apos;s numerous challenges.
               </p>
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-start">
@@ -432,7 +470,7 @@ export default function Locator() {
             <div className="bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-sm">
               <h3 className="text-2xl font-light mb-4">Start Your Own Group</h3>
               <p className="text-gray-300 mb-6">
-                Don't see a group that meets your specific needs? Consider starting your own and creating the supportive community you're looking for.
+                Don&apos;t see a group that meets your specific needs? Consider starting your own and creating the supportive community you&apos;re looking for.
               </p>
               <p className="text-gray-400 mb-6">
                 Our platform makes it easy to register and manage your group, connect with members, and grow your community.

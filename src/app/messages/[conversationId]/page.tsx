@@ -28,22 +28,22 @@ export default function ConversationPage() {
   }, [initialize])
 
   useEffect(() => {
-    if (loading) return
+    if (loading) return;
     
     if (!user) {
-      router.push('/api/auth/login')
-      return
+      router.push('/api/auth/login');
+      return;
     }
     
-    if (!params.conversationId) return
+    if (!params.conversationId) return;
     
-    fetchConversation()
+    fetchConversation();
     
     // Setup real-time subscription for new messages
     let messagesSubscription: any = null;
     
     if (group?.id) {
-      fetchMessages()
+      fetchMessages();
       
       messagesSubscription = supabase
         .channel('messages')
@@ -53,17 +53,17 @@ export default function ConversationPage() {
           table: 'messages',
           filter: `group_id=eq.${group.id}`
         }, () => {
-          fetchMessages()
+          fetchMessages();
         })
-        .subscribe()
+        .subscribe();
     }
     
     return () => {
       if (messagesSubscription) {
-        supabase.removeChannel(messagesSubscription)
+        supabase.removeChannel(messagesSubscription);
       }
-    }
-  }, [user, loading, params.conversationId, router, group?.id])
+    };
+  }, [user, loading, params.conversationId, router, group?.id]);
   
   useEffect(() => {
     // Scroll to bottom when messages change
