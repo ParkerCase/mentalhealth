@@ -60,43 +60,139 @@ export default function Locator() {
     }
   }, [])
   
+  // Helper function to parse PostGIS hex geometry to coordinates
+  const parsePostGISGeometry = (hexString: string): { lat: number, lng: number } | null => {
+    try {
+      // PostGIS hex format: SRID=4326;POINT(lng lat)
+      // Hex format: 0101000020E6100000 + 16 bytes for lng + 16 bytes for lat
+      if (hexString.startsWith('0101000020E6100000')) {
+        const coordHex = hexString.substring(18) // Remove SRID and type prefix
+        if (coordHex.length >= 32) {
+          const lngHex = coordHex.substring(0, 16)
+          const latHex = coordHex.substring(16, 32)
+          
+          // Convert hex to float (little-endian)
+          const lngBytes = new Uint8Array(lngHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+          const latBytes = new Uint8Array(latHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)))
+          
+          const lngView = new DataView(lngBytes.buffer)
+          const latView = new DataView(latBytes.buffer)
+          
+          const lng = lngView.getFloat64(0, true) // true for little-endian
+          const lat = latView.getFloat64(0, true)
+          
+          return { lat, lng }
+        }
+      }
+      return null
+    } catch (error) {
+      console.error('Error parsing PostGIS geometry:', error)
+      return null
+    }
+  }
+
   // Fetch groups from Supabase
   const fetchGroups = useCallback(async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('groups')
-        .select('*')
+      // Try to use RPC function first
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_groups_with_coordinates')
         .eq('approved', true)
       
-      if (error) throw error
-      
-      // Transform the data to match our GroupData structure
-      const formattedGroups = data.map(group => {
-        // First check for geo_location and extract coordinates
-        let lat = 0, lng = 0
-        if (group.geo_location && 
-            group.geo_location.coordinates && 
-            Array.isArray(group.geo_location.coordinates) && 
-            group.geo_location.coordinates.length >= 2) {
-          // GeoJSON stores coordinates as [longitude, latitude]
-          lng = group.geo_location.coordinates[0]
-          lat = group.geo_location.coordinates[1]
-        }
-        
-        return {
+      if (!rpcError && rpcData) {
+        // Use the RPC result directly
+        const formattedGroups = rpcData.map((group: any) => ({
           id: group.id,
           name: group.name,
-          lat,
-          lng,
+          lat: group.lat || 0,
+          lng: group.lng || 0,
           city: group.city,
           state: group.state,
           description: group.description,
           email: group.email,
           phone: group.phone,
           website: group.website
-        }
-      })
+        }))
+        
+        setGroups(formattedGroups)
+        return
+      }
+      
+      // Fallback to regular query with raw SQL to extract coordinates
+      const { data, error } = await supabase
+        .from('groups')
+        .select(`
+          id,
+          name,
+          description,
+          city,
+          state,
+          email,
+          phone,
+          website,
+          ST_Y(ST_AsText(geo_location)) as lat,
+          ST_X(ST_AsText(geo_location)) as lng
+        `)
+        .eq('approved', true)
+        .not('geo_location', 'is', null)
+      
+      if (error) {
+        // Final fallback - basic query with PostGIS parsing
+        const { data: basicData, error: basicError } = await supabase
+          .from('groups')
+          .select('*')
+          .eq('approved', true)
+        
+        if (basicError) throw basicError
+        
+        const formattedGroups = basicData.map((group: any) => {
+          let lat = 0, lng = 0
+          
+          // Parse PostGIS geometry if available
+          if (group.geo_location && typeof group.geo_location === 'string') {
+            const coords = parsePostGISGeometry(group.geo_location)
+            if (coords) {
+              lat = coords.lat
+              lng = coords.lng
+            }
+          } else if (group.geo_location && group.geo_location.coordinates) {
+            // GeoJSON format
+            lng = group.geo_location.coordinates[0]
+            lat = group.geo_location.coordinates[1]
+          }
+          
+          return {
+            id: group.id,
+            name: group.name,
+            lat,
+            lng,
+            city: group.city,
+            state: group.state,
+            description: group.description,
+            email: group.email,
+            phone: group.phone,
+            website: group.website
+          }
+        })
+        
+        setGroups(formattedGroups)
+        return
+      }
+      
+      // Use the SQL result with coordinates
+      const formattedGroups = data.map((group: any) => ({
+        id: group.id,
+        name: group.name,
+        lat: parseFloat(group.lat) || 0,
+        lng: parseFloat(group.lng) || 0,
+        city: group.city,
+        state: group.state,
+        description: group.description,
+        email: group.email,
+        phone: group.phone,
+        website: group.website
+      }))
       
       setGroups(formattedGroups)
     } catch (error) {
@@ -325,7 +421,13 @@ export default function Locator() {
         ) : (
           <RealisticDayNightGlobe
             ref={globeRef}
-            groups={groups}
+            groups={groups.map(group => ({
+              ...group,
+              geo_location: {
+                type: 'Point',
+                coordinates: [group.lng, group.lat] // [lng, lat] format expected by globe
+              }
+            }))}
             onGroupSelect={g => handleGroupSelect(g as GroupData)}
             interactive={true}
             showSearch={false}
