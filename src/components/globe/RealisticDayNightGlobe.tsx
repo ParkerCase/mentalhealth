@@ -202,12 +202,19 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
     ];
   }, [groupMarkers]);
 
-  // Marker click handler
-  const handleMarkerClick = useCallback((marker: GroupMarker) => {
+  // Marker click handler - Updated to match Globe component signature
+  const handleMarkerClick = useCallback((point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {
     if (interactive && onGroupSelect) {
-      onGroupSelect(marker);
+      // Find the corresponding group marker by coordinates
+      const marker = groupMarkers.find(m => 
+        Math.abs(m.lat - coords.lat) < 0.001 && 
+        Math.abs(m.lng - coords.lng) < 0.001
+      );
+      if (marker) {
+        onGroupSelect(marker);
+      }
     }
-  }, [interactive, onGroupSelect]);
+  }, [interactive, onGroupSelect, groupMarkers]);
 
   // Optimized search with debouncing
   const handleSearch = useCallback(async (e: FormEvent) => {
