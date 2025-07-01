@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { useAuthStore } from '@/lib/stores/authStore'
@@ -20,7 +20,6 @@ export default function AuthUI({
 }: AuthUIProps) {
   const router = useRouter()
   const { user, initialize } = useAuthStore()
-  const [supabase] = useState(() => createClient())
 
   useEffect(() => {
     initialize()

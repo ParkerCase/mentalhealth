@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { format } from 'date-fns'
@@ -14,7 +14,6 @@ export default function Archives() {
   const [categories, setCategories] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     fetchArticles()
@@ -36,8 +35,7 @@ export default function Archives() {
           featured,
           thumbnail_url,
           created_at,
-          updated_at,
-          profiles:profiles(username, avatar_url)
+          updated_at
         `)
         .eq('published', true)
         .order('created_at', { ascending: false })

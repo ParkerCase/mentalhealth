@@ -3,7 +3,7 @@
 import { useState, useEffect, ChangeEvent, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { FaUser, FaCamera, FaSignOutAlt, FaEdit } from 'react-icons/fa'
 
@@ -29,7 +29,6 @@ export default function ProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const supabase = createClient()
 
   useEffect(() => {
     initialize()
@@ -94,6 +93,9 @@ export default function ProfilePage() {
     try {
       if (!user) throw new Error('User not authenticated')
       
+      console.log('User:', user);
+      console.log('Supabase session:', supabase.auth.getSession && await supabase.auth.getSession());
+      
       // Update avatar if changed
       let avatar_url = profile?.avatar_url || null
       
@@ -118,11 +120,13 @@ export default function ProfilePage() {
         const fileExt = avatarFile.name.split('.').pop()
         const filePath = `${user.id}-${Date.now()}.${fileExt}`
         
-        const { error: uploadError } = await supabase.storage
+        const { data, error } = await supabase.storage
           .from('avatars')
           .upload(filePath, avatarFile)
         
-        if (uploadError) throw uploadError
+        console.log('Upload result:', { data, error });
+        
+        if (error) throw error
         
         // Get the public URL
         const { data: publicUrlData } = supabase.storage
@@ -132,20 +136,49 @@ export default function ProfilePage() {
         avatar_url = publicUrlData.publicUrl
       }
       
-      // Update profile
-      const { error: updateError } = await supabase
+      // Check if profile row exists
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .update({
-          username: formData.username,
-          full_name: formData.full_name,
-          bio: formData.bio,
-          location: formData.location,
-          avatar_url,
-          updated_at: new Date().toISOString()
-        })
+        .select('id')
         .eq('id', user.id)
-      
-      if (updateError) throw updateError
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = No rows found
+        throw fetchError;
+      }
+
+      if (!existingProfile) {
+        // Insert a new profile row if it doesn't exist
+        const insertResponse = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            username: formData.username,
+            full_name: formData.full_name,
+            bio: formData.bio,
+            location: formData.location,
+            avatar_url,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        console.log('Insert response:', insertResponse);
+        if (insertResponse.error) setError(insertResponse.error.message);
+      } else {
+        // Update the existing profile row
+        const updateResponse = await supabase
+          .from('profiles')
+          .update({
+            username: formData.username,
+            full_name: formData.full_name,
+            bio: formData.bio,
+            location: formData.location,
+            avatar_url,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+        console.log('Update response:', updateResponse);
+        if (updateResponse.error) setError(updateResponse.error.message);
+      }
       
       setSuccess('Profile updated successfully!')
       setIsEditing(false)
@@ -218,15 +251,16 @@ export default function ProfilePage() {
             </div>
             
             <div className="flex-grow text-center md:text-left">
-              <h2 className="text-2xl font-semibold">
+              <h2 className="text-2xl font-semibold text-gray-600">
                 {isEditing ? (
                   <input
                     type="text"
                     name="full_name"
                     value={formData.full_name}
                     onChange={handleChange}
+                    style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}}
                     placeholder="Your Name"
-                    className="block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2"
+                    className="block w-full md:w-1/2 rounded-md border-gray-300 bg-slate-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2"
                   />
                 ) : (
                   profile?.full_name || 'Your Name'
@@ -240,8 +274,9 @@ export default function ProfilePage() {
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
+                    style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}}
                     placeholder="username"
-                    className="block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="block w-full md:w-1/2 rounded-md border-gray-300 bg-slate-50 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
                 ) : (
                   `@${profile?.username || 'username'}`
@@ -313,6 +348,7 @@ export default function ProfilePage() {
                   id="bio"
                   name="bio"
                   rows={4}
+                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}}
                   value={formData.bio}
                   onChange={handleChange}
                   placeholder="Tell us about yourself..."
@@ -328,10 +364,11 @@ export default function ProfilePage() {
                   type="text"
                   id="location"
                   name="location"
+                  style={{backgroundColor: "#fff !important ", color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}}
                   value={formData.location}
                   onChange={handleChange}
                   placeholder="City, State"
-                  className="block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="block w-full md:w-1/2 rounded-md border-gray-300 bg-slate-50 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               
@@ -339,8 +376,9 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
                 </label>
-                <p className="text-gray-600">{user?.email}</p>
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                <p style={{backgroundColor: "#aaa ", borderRadius: "5px",
+                  color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}} className="text-gray-600">{user?.email}</p>
+                <p className="text-xs text-gray-500 mt-1">*Email cannot be changed</p>
               </div>
               
               <div className="flex justify-end">

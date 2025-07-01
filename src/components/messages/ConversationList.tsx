@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { FaUser, FaCircle } from 'react-icons/fa'
 import { format } from 'date-fns'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 
 interface Conversation {
   id: string
@@ -25,7 +25,6 @@ export default function ConversationList() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -89,7 +88,7 @@ export default function ConversationList() {
     }
     
     fetchConversations()
-  }, [supabase])
+  }, [])
 
   if (loading) {
     return (

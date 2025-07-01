@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { format } from 'date-fns'
@@ -14,7 +14,6 @@ export default function ArticlePage() {
   const [article, setArticle] = useState<Article | null>(null)
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     if (!params.id) return
@@ -36,8 +35,7 @@ export default function ArticlePage() {
           featured,
           thumbnail_url,
           created_at,
-          updated_at,
-          profiles:profiles(username, avatar_url)
+          updated_at
         `)
         .eq('id', id)
         .eq('published', true)
@@ -51,19 +49,7 @@ export default function ArticlePage() {
       // Process data to match our Article type
       const processedArticle: Article = {
         ...data,
-        // Convert profiles to the correct format
-        profiles: data.profiles ? {
-          username: data.profiles && typeof data.profiles === 'object' && 'username' in data.profiles 
-            ? String(data.profiles.username) 
-            : Array.isArray(data.profiles) && data.profiles.length > 0 && typeof data.profiles[0] === 'object' && 'username' in data.profiles[0]
-              ? String(data.profiles[0].username)
-              : undefined,
-          avatar_url: data.profiles && typeof data.profiles === 'object' && 'avatar_url' in data.profiles 
-            ? String(data.profiles.avatar_url) 
-            : Array.isArray(data.profiles) && data.profiles.length > 0 && typeof data.profiles[0] === 'object' && 'avatar_url' in data.profiles[0]
-              ? String(data.profiles[0].avatar_url)
-              : undefined
-        } : undefined
+        profiles: undefined // No profiles since we removed the join
       }
 
       setArticle(processedArticle)

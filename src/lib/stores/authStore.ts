@@ -1,6 +1,6 @@
 // src/lib/stores/authStore.ts
 import { create } from 'zustand'
-import { createClient } from '../supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { Profile } from '../types'
 
@@ -25,7 +25,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     if (get().initialized) return
     
-    const supabase = createClient()
     set({ loading: true })
     
     try {
@@ -75,7 +74,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   
   refreshProfile: async () => {
-    const supabase = createClient()
     const { user } = get()
     
     if (!user) return
@@ -96,12 +94,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   
   signIn: async ({ email, password }) => {
-    const supabase = createClient()
     return supabase.auth.signInWithPassword({ email, password })
   },
   
   signUp: async ({ email, password, username }) => {
-    const supabase = createClient()
     return supabase.auth.signUp({ 
       email, 
       password,
@@ -114,7 +110,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   
   signOut: async () => {
-    const supabase = createClient()
     set({ user: null, profile: null })
     return supabase.auth.signOut()
   }

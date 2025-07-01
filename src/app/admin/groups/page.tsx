@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { FaCheck, FaTimes, FaSearch, FaFilter } from 'react-icons/fa'
 import { Group } from '@/lib/types'
@@ -13,7 +13,6 @@ export default function AdminGroups() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all') // 'all', 'approved', 'pending'
-  const supabase = createClient()
   
   useEffect(() => {
     const fetchGroups = async () => {

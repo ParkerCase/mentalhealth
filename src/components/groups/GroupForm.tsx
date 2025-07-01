@@ -2,7 +2,7 @@
 
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { GroupFormData } from '@/lib/types'
 import { geocodeAddress } from '@/lib/utils/geocodingService'
@@ -14,7 +14,6 @@ interface GroupFormProps {
 export default function GroupForm({ onSuccess }: GroupFormProps) {
   const router = useRouter()
   const { user } = useAuthStore()
-  const supabase = createClient()
   const [formData, setFormData] = useState<GroupFormData>({
     name: '',
     description: '',

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { format } from 'date-fns'
@@ -23,7 +23,6 @@ export default function MessagesPage() {
   const { user, profile, loading, initialize } = useAuthStore()
   const [conversations, setConversations] = useState<ConversationWithMessagesAndGroup[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     initialize()

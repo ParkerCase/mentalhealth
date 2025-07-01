@@ -36,7 +36,11 @@ export const getConversations = async (req: Request, res: Response, next: NextFu
       const { data: lastMessageData, error: lastMessageError } = await supabase
         .from('messages')
         .select('*')
-        .eq('group_id', conversation.groups?.id)
+        .eq('group_id',
+          Array.isArray(conversation.groups) && conversation.groups.length > 0 && 'id' in conversation.groups[0]
+            ? (conversation.groups[0] as { id: any }).id
+            : undefined
+        )
         .or(`sender_id.eq.${req.user.id},recipient_id.eq.${req.user.id}`)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -46,7 +50,11 @@ export const getConversations = async (req: Request, res: Response, next: NextFu
       const { count: unreadCount, error: countError } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
-        .eq('group_id', conversation.groups?.id)
+        .eq('group_id',
+          Array.isArray(conversation.groups) && conversation.groups.length > 0 && 'id' in conversation.groups[0]
+            ? (conversation.groups[0] as { id: any }).id
+            : undefined
+        )
         .eq('read', false)
         .neq('sender_id', req.user.id);
       
@@ -205,7 +213,11 @@ export const getConversationMessages = async (req: Request, res: Response, next:
           avatar_url
         )
       `)
-      .eq('group_id', conversation.group_id)
+      .eq('group_id',
+        Array.isArray(conversation.groups) && conversation.groups.length > 0 && 'id' in conversation.groups[0]
+          ? (conversation.groups[0] as { id: any }).id
+          : undefined
+      )
       .order('created_at', { ascending: false })
       .limit(Number(limit));
     

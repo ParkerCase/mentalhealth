@@ -7,7 +7,7 @@ export default function AboutPage() {
         <div className="bg-white shadow-md rounded-lg p-6 mb-8">
           <h2 style={{color: "#374151"}} className="text-2xl font-semibold mb-4">Our Mission</h2>
           <p className="text-gray-700 mb-4">
-            Men's mental health is at an all time low. Our mission at AriseDivineMasculine is to connect individuals with the support groups and communities they need to 
+            Men&apos;s mental health is at an all time low. Our mission at AriseDivineMasculine is to connect individuals with the support groups and communities they need to 
             thrive. We believe that everyone deserves access to supportive spaces where they can share 
             experiences, find resources, and build meaningful connections.
           </p>
@@ -36,7 +36,7 @@ export default function AboutPage() {
             <h2 style={{color: "#374151"}} className="text-2xl font-semibold mb-4">Our Values</h2>
             <ul className="space-y-3">
               <li style={{color: "#374151"}} className="flex">
-                <div className="mr-2 mt-1 bg-blue-100 text-blue-600 rounded-full p-1">
+                <div  className="mr-2 mt-1 text-blue-600 rounded-full p-1">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
                   </svg>
@@ -46,7 +46,7 @@ export default function AboutPage() {
                 </div>
               </li>
               <li style={{color: "#374151"}} className="flex">
-                <div className="mr-2 mt-1 bg-blue-100 text-blue-600 rounded-full p-1">
+                <div className="mr-2 mt-1  text-blue-600 rounded-full p-1">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
                   </svg>
@@ -56,7 +56,7 @@ export default function AboutPage() {
                 </div>
               </li>
               <li style={{color: "#374151"}} className="flex">
-                <div className="mr-2 mt-1 bg-blue-100 text-blue-600 rounded-full p-1">
+                <div className="mr-2 mt-1 text-blue-600 rounded-full p-1">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
                   </svg>
@@ -66,7 +66,7 @@ export default function AboutPage() {
                 </div>
               </li>
               <li style={{color: "#374151"}} className="flex">
-                <div className="mr-2 mt-1 bg-blue-100 text-blue-600 rounded-full p-1">
+                <div className="mr-2 mt-1 text-blue-600 rounded-full p-1">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
                   </svg>
@@ -88,7 +88,14 @@ export default function AboutPage() {
               <p className="text-gray-600"></p>
             </div>
             <div  className="text-center">
-              <div className="w-32 h-32 mx-auto bg-gray-200 rounded-full mb-4"></div>
+              <div className="w-32 h-32 mx-auto rounded-full mb-4 overflow-hidden bg-gray-200 flex items-center justify-center">
+                <img
+                  src="/assets/arise-fish.jpeg"
+                  alt="Jon Fisher, Founder & CEO"
+                  className="object-cover w-full h-full"
+                  style={{ display: 'block' }}
+                />
+              </div>
               <h3 className="text-gray-700 font-semibold">Jon Fisher</h3>
               <p className="text-gray-600">Founder & CEO</p>
             </div>
@@ -100,23 +107,23 @@ export default function AboutPage() {
           </div>
         </div>
         
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+        <div className="bg-blue-50 border-l-4 border-orange-500 p-6 rounded-r-lg">
           <h2 style={{color: "#374151"}} className="text-2xl font-semibold mb-4">Join Our Mission</h2>
           <p className="text-gray-700 mb-4">
-            We're always looking for passionate individuals and organizations to join our mission. Whether 
-            you want to register your support group, volunteer your time, or partner with us, we'd love to 
+            We&apos;re always looking for passionate individuals and organizations to join our mission. Whether 
+            you want to register your support group, volunteer your time, or partner with us, we&apos;d love to 
             hear from you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <a
               href="/groups/register"
-              className="bg-blue-600 text-white px-6 py-3 rounded-md text-center hover:bg-blue-700 transition-colors"
+              className="bg-orange-600 text-white px-6 py-3 rounded-md text-center hover:bg-orange-700 transition-colors"
             >
               Register Your Group
             </a>
             <a
               href="/contact"
-              className="bg-white text-blue-600 border border-blue-600 px-6 py-3 rounded-md text-center hover:bg-blue-50 transition-colors"
+              className="bg-white text-orange-600 border border-orange-600 px-6 py-3 rounded-md text-center hover:bg-blue-50 transition-colors"
             >
               Contact Us
             </a>

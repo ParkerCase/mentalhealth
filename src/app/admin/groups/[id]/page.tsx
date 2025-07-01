@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FaCheck, FaTimes, FaEdit, FaArrowLeft, FaMapMarkerAlt, FaPhone, FaEnvelope, FaGlobe } from 'react-icons/fa'
@@ -15,7 +15,6 @@ export default function AdminGroupDetail() {
   const [group, setGroup] = useState<GroupWithLeaders | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const supabase = createClient()
   
   useEffect(() => {
     const fetchGroup = async () => {

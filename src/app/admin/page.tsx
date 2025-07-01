@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { FaUsers, FaUserFriends, FaComments, FaClipboardList } from 'react-icons/fa'
 import Link from 'next/link'
 import { Group } from '@/lib/types'
@@ -25,7 +25,6 @@ export default function AdminDashboard() {
   })
   const [recentGroups, setRecentGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
   
   useEffect(() => {
     const fetchStats = async () => {

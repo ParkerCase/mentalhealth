@@ -21,7 +21,7 @@ export const validate = (validations: ValidationChain[]) => {
     const formattedErrors: Record<string, string[]> = {};
     
     errors.array().forEach(error => {
-      const field = error.path;
+      const field = (error as any).param;
       if (!formattedErrors[field]) {
         formattedErrors[field] = [];
       }

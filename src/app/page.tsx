@@ -41,23 +41,63 @@ const exampleGroups = [
     },
     city: 'Chicago',
     state: 'IL'
+  },
+  // More groups in New York
+  {
+    id: 'group-4',
+    name: "NYC Men's Circle",
+    geo_location: {
+      type: 'Point',
+      coordinates: [-74.0059, 40.7130]
+    },
+    city: 'New York',
+    state: 'NY'
+  },
+  {
+    id: 'group-5',
+    name: 'Brooklyn Brotherhood',
+    geo_location: {
+      type: 'Point',
+      coordinates: [-73.9442, 40.6782]
+    },
+    city: 'New York',
+    state: 'NY'
+  },
+  {
+    id: 'group-6',
+    name: 'Harlem Supporters',
+    geo_location: {
+      type: 'Point',
+      coordinates: [-73.9442, 40.8116]
+    },
+    city: 'New York',
+    state: 'NY'
+  },
+  // More groups in LA
+  {
+    id: 'group-7',
+    name: 'LA Wellness',
+    geo_location: {
+      type: 'Point',
+      coordinates: [-118.2436, 34.0524]
+    },
+    city: 'Los Angeles',
+    state: 'CA'
+  },
+  {
+    id: 'group-8',
+    name: 'Santa Monica Men',
+    geo_location: {
+      type: 'Point',
+      coordinates: [-118.4912, 34.0195]
+    },
+    city: 'Los Angeles',
+    state: 'CA'
   }
 ];
 
-// Dynamically import the globe component with no SSR
-const GlobalRealisticGlobe = dynamic(
-  () => import('@/components/globe/GlobalRealisticGlobe').then(mod => mod.default),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="h-screen w-full flex items-center justify-center bg-[#292929]">
-        <div className="animate-pulse text-gray-400 tracking-wider text-sm">
-          Loading visualization...
-        </div>
-      </div>
-    )
-  }
-);
+// Dynamically import RealisticDayNightGlobe with no SSR
+const RealisticDayNightGlobe = dynamic(() => import('@/components/globe/RealisticDayNightGlobe'), { ssr: false });
 
 // Error boundary component
 function ErrorBoundary({ children }: { children: React.ReactNode }) {
@@ -87,6 +127,7 @@ export default function Home() {
   const { initialize } = useAuthStore()
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | undefined>();
+  const [heroSize, setHeroSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     initialize()
@@ -114,6 +155,16 @@ export default function Home() {
         }
       );
     }
+
+    function updateSize() {
+      setHeroSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
   }, [initialize])
   
   // Handle group selection
@@ -126,9 +177,9 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#292929] overflow-hidden">
       {/* Hero Section with full-height globe visualization */}
-      <section className="relative h-screen flex items-center overflow-hidden">
+      <section className="relative h-screen flex items-center overflow-visible">
         {/* Background globe visualization */}
-        <div className="absolute inset-0 w-full h-full z-0">
+        <div className="absolute inset-0 w-full h-full z-0 overflow-visible pointer-events-none">
           <ErrorBoundary>
             <Suspense fallback={
               <div className="h-screen w-full flex items-center justify-center">
@@ -137,15 +188,14 @@ export default function Home() {
                 </div>
               </div>
             }>
-              <GlobalRealisticGlobe 
-                height="100vh"
-                width="100%"
+              <RealisticDayNightGlobe
                 groups={exampleGroups}
-                selectedGroupId={selectedGroupId}
-                onGroupSelect={handleGroupSelect}
-                initialCoordinates={userLocation}
-                autoRotate={!selectedGroupId} // Stop rotation when a group is selected
-                performanceLevel="high"
+                interactive={false}
+                showSearch={false}
+                width={heroSize.width}
+                height={heroSize.height}
+                style={{ transform: 'scale(1.2) translateY(-5%)' }}
+                initialCoordinates={userLocation || { lat: 0, lng: -120 }}
               />
             </Suspense>
           </ErrorBoundary>
@@ -263,7 +313,7 @@ export default function Home() {
             <div className="bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-sm">
               <h3 className="text-2xl font-light mb-4">Find Your Community</h3>
               <p className="text-gray-300 mb-6">
-                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life's many challenges.
+                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life&apos;s many challenges.
               </p>
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-start">

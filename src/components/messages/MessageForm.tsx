@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { FaPaperPlane } from 'react-icons/fa'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/lib/stores/authStore'
 
 interface MessageFormProps {
@@ -22,7 +22,6 @@ export default function MessageForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const { user } = useAuthStore()
-  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

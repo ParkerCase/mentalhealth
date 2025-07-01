@@ -6,6 +6,8 @@ const nextConfig = {
 
   images: {
     domains: [
+      "ldpfadlrxmmgsttkjwop.supabase.co", // <-- your Supabase project ref
+
       "pbzjrfcoipldrkpytikw.supabase.co",
       "avatars.githubusercontent.com",
       "lh3.googleusercontent.com",

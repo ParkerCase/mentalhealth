@@ -3,7 +3,7 @@
 
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { ContactFormData } from '@/lib/types'
 
 export default function ContactPage() {
@@ -17,7 +17,6 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const supabase = createClient()
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -85,7 +84,7 @@ export default function ContactPage() {
                 <div className="ml-3">
                   <h3 className="text-lg font-medium text-green-800">Message Sent!</h3>
                   <p className="mt-2 text-green-700">
-                    Thank you for reaching out. We've received your message and will get back to you as soon as possible.
+                    Thank you for reaching out. We&apos;ve received your message and will get back to you as soon as possible.
                   </p>
                   <div className="mt-4">
                     <button
@@ -119,7 +118,7 @@ export default function ContactPage() {
               <div className="mb-6">
                 <h2 style={{color: "#374151 "}} className="text-xl font-semibold mb-4">Send Us a Message</h2>
                 <p className="text-gray-600 mb-4">
-                  Have a question, feedback, or need assistance? Fill out the form below and we'll get back to you as soon as possible.
+                  Have a question, feedback, or need assistance? Fill out the form below and we&apos;ll get back to you as soon as possible.
                 </p>
               </div>
               
@@ -129,7 +128,7 @@ export default function ContactPage() {
                     Your Name *
                   </label>
                   <input
-                                    style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
+                                    style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}}
 
                     type="text"
                     id="name"
@@ -146,7 +145,7 @@ export default function ContactPage() {
                     Your Email *
                   </label>
                   <input
-                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
+                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}}
                     type="email"
                     id="email"
                     name="email"
@@ -163,7 +162,7 @@ export default function ContactPage() {
                   Subject
                 </label>
                 <input
-                                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
+                                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}}
 
                   type="text"
                   id="subject"
@@ -179,7 +178,7 @@ export default function ContactPage() {
                   Message *
                 </label>
                 <textarea
-                                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
+                                  style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px", padding: "5px"}}
 
                   id="message"
                   name="message"

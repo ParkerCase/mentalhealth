@@ -14,7 +14,7 @@ export const searchGroups = async (req: Request, res: Response, next: NextFuncti
     // Start building query
     let query = supabase
       .from('groups')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('approved', true);
     
     // Apply filters
@@ -35,10 +35,9 @@ export const searchGroups = async (req: Request, res: Response, next: NextFuncti
     const to = from + limit - 1;
     
     // Get data with pagination
-    const { data, error, count } = await query
+    const { data, count, error } = await query
       .order('created_at', { ascending: false })
-      .range(from, to)
-      .select('*', { count: 'exact' });
+      .range(from, to);
     
     if (error) throw new HttpError(500, 'Error searching groups');
     

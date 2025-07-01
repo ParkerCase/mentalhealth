@@ -1,6 +1,6 @@
 // src/lib/hooks/useAuth.ts
 import { useEffect, useState } from 'react'
-import { createClient } from '../supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Profile, AuthFormData } from '@/lib/types'
 import { User, Session } from '@supabase/supabase-js'
@@ -10,7 +10,6 @@ export function useAuth() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
 
   const initialize = async () => {
     setLoading(true)

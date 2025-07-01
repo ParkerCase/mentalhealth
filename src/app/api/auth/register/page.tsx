@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import Link from 'next/link'
 import AuthUI from '@/components/auth/AuthUI'
 
-export default function RegisterPage() {
+function RegisterPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading, initialize } = useAuthStore()
@@ -80,4 +80,12 @@ export default function RegisterPage() {
       </div>
     </div>
   )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterPageInner />
+    </Suspense>
+  );
 }
