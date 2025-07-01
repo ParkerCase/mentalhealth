@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { FaInfoCircle, FaEdit, FaPaperPlane, FaSpinner, FaTimes } from 'react-icons/fa'
+import { FaInfoCircle, FaEdit, FaPaperPlane, FaSpinner, FaTimes, FaSearch } from 'react-icons/fa'
 import dynamic from 'next/dynamic'
 const RealisticDayNightGlobe = dynamic(() => import('@/components/globe/RealisticDayNightGlobe'), { ssr: false })
 import { GroupData } from '@/components/globe/SimpleGlobe'
+
+// Extended type for search results with distance
+type GroupDataWithDistance = GroupData & { distance?: number }
 
 export default function Locator() {
   const router = useRouter()
@@ -25,6 +28,8 @@ export default function Locator() {
   const [searchValue, setSearchValue] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<GroupDataWithDistance[]>([])
+  const [showSearchResults, setShowSearchResults] = useState(false)
   
   // Check if mobile
   useEffect(() => {
@@ -60,6 +65,19 @@ export default function Locator() {
     }
   }, [])
   
+  // Helper function to calculate distance between two coordinates (Haversine formula)
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
   // Helper function to parse PostGIS hex geometry to coordinates
   const parsePostGISGeometry = (hexString: string): { lat: number, lng: number } | null => {
     try {
@@ -281,15 +299,37 @@ export default function Locator() {
     if (!searchValue.trim()) return;
     setSearchLoading(true);
     setSearchError(null);
+    setShowSearchResults(false);
+    
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchValue)}&limit=1`);
       const data = await res.json();
       if (data && data.length > 0) {
         const { lat, lon } = data[0];
+        const searchLat = parseFloat(lat);
+        const searchLng = parseFloat(lon);
+        
+        // Fly to the searched location
         if (globeRef.current && globeRef.current.pointOfView) {
-          globeRef.current.pointOfView({ lat: parseFloat(lat), lng: parseFloat(lon), altitude: 2.5 }, 1200);
+          globeRef.current.pointOfView({ lat: searchLat, lng: searchLng, altitude: 2.5 }, 1200);
         }
         setAutoRotate(false);
+        
+        // Find groups within 50 miles of the searched location
+        const nearbyGroups = groups.filter(group => {
+          const distance = calculateDistance(searchLat, searchLng, group.lat, group.lng);
+          return distance <= 50; // 50 mile radius
+        }).map(group => ({
+          ...group,
+          distance: calculateDistance(searchLat, searchLng, group.lat, group.lng)
+        })).sort((a, b) => a.distance - b.distance);
+        
+        setSearchResults(nearbyGroups);
+        setShowSearchResults(true);
+        
+        if (nearbyGroups.length === 0) {
+          setSearchError('No groups found within 50 miles of this location.');
+        }
       } else {
         setSearchError('Location not found.');
       }
@@ -301,7 +341,7 @@ export default function Locator() {
   };
   
   // State to track if an overlay/modal is open
-  const overlayOpen = Boolean(selectedGroup) || (!isLoading && groups.length === 0);
+  const overlayOpen = Boolean(selectedGroup) || showSearchResults || (!isLoading && groups.length === 0);
   
   return (
     <div className="min-h-screen bg-[#292929] overflow-x-hidden">
@@ -363,7 +403,7 @@ export default function Locator() {
             value={searchValue}
             onChange={e => setSearchValue(e.target.value)}
             placeholder={isMobile ? "Search location..." : "Search for a city or place..."}
-            className="flex-1 rounded border-none outline-none text-gray-900"
+            className="flex-1 rounded border-none outline-none text-white"
             style={{ 
               padding: isMobile ? '8px 12px' : '10px 14px', 
               borderRadius: 6,
@@ -533,6 +573,117 @@ export default function Locator() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search Results Modal - Mobile optimized */}
+        {showSearchResults && (
+          <div className={`absolute z-30 bg-black/80 backdrop-blur-md rounded-lg border border-gray-600 pointer-events-auto ${
+            isMobile 
+              ? 'inset-x-4 top-20 bottom-20 overflow-y-auto'
+              : 'left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto'
+          }`}>
+            <div className="p-4 sm:p-6">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className={`font-light text-white mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
+                    Groups Near {searchValue}
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    Found {searchResults.length} group{searchResults.length !== 1 ? 's' : ''} within 50 miles
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowSearchResults(false)}
+                  className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
+                >
+                  <FaTimes className="text-xl" />
+                </button>
+              </div>
+
+              {/* Search Results */}
+              {searchResults.length > 0 ? (
+                <div className="space-y-4">
+                  {searchResults.map((group) => (
+                    <div key={group.id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-medium text-white mb-1">{group.name}</h3>
+                          <div className="text-gray-400 text-sm mb-2">
+                            {[group.city, group.state].filter(Boolean).join(', ')}
+                            {group.distance && (
+                              <span className="ml-2 text-blue-400">
+                                • {group.distance.toFixed(1)} miles away
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gray-300 text-sm line-clamp-2">{group.description}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Contact methods */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {group.email && (
+                          <a 
+                            href={`mailto:${group.email}`}
+                            className="text-blue-400 hover:text-blue-300 text-xs flex items-center p-2 bg-blue-900/20 rounded"
+                          >
+                            <span className="mr-1">✉️</span> Email
+                          </a>
+                        )}
+                        {group.phone && (
+                          <a 
+                            href={`tel:${group.phone}`}
+                            className="text-green-400 hover:text-green-300 text-xs flex items-center p-2 bg-green-900/20 rounded"
+                          >
+                            <span className="mr-1">📞</span> Call
+                          </a>
+                        )}
+                        {group.website && (
+                          <a 
+                            href={group.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-400 hover:text-purple-300 text-xs flex items-center p-2 bg-purple-900/20 rounded"
+                          >
+                            <span className="mr-1">🌐</span> Website
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedGroup(group);
+                            setShowSearchResults(false);
+                          }}
+                          className="btn-secondary flex-1 text-sm py-2"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => sendMessage(group.id)}
+                          className="btn-primary flex-1 text-sm py-2"
+                          disabled={authLoading || (user === null && requiresLogin === false)}
+                        >
+                          <FaPaperPlane className="mr-1" /> Contact
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-4">
+                    <FaSearch className="text-4xl mx-auto mb-4" />
+                    <p>No groups found within 50 miles of this location.</p>
+                    <p className="text-sm mt-2">Try searching for a different city or area.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

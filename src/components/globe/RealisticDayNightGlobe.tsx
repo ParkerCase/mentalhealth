@@ -184,23 +184,15 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
       }));
   }, [groups, selectedGroupId]);
 
-  // Optimized hex points with memoization
+  // Optimized hex points with memoization - only major cities
   const hexPoints = useMemo(() => {
-    return [
-      ...MAJOR_CITIES.map(city => ({
-        lat: city.lat,
-        lng: city.lng,
-        weight: 2, // Reduced weight for better performance
-        isMajor: true
-      })),
-      ...groupMarkers.map(g => ({
-        lat: g.lat,
-        lng: g.lng,
-        weight: 6, // Groups have more impact
-        isMajor: false
-      }))
-    ];
-  }, [groupMarkers]);
+    return MAJOR_CITIES.map(city => ({
+      lat: city.lat,
+      lng: city.lng,
+      weight: 2, // Reduced weight for better performance
+      isMajor: true
+    }));
+  }, []);
 
   // Marker click handler - Updated to match Globe component signature
   const handleMarkerClick = useCallback((point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {
@@ -387,8 +379,8 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
           pointsData={groupMarkers}
           pointLat={(d: any) => d.lat}
           pointLng={(d: any) => d.lng}
-          pointAltitude={0.01}
-          pointRadius={0.5}
+          pointAltitude={0.02}
+          pointRadius={1.0}
           pointColor={(d: any) => d.isSelected ? '#FFD700' : '#FF6B47'}
           onPointClick={handleMarkerClick}
           atmosphereColor="#FFD9A0"
