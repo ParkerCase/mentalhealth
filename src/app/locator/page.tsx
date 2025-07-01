@@ -669,7 +669,7 @@ export default function Locator() {
                           className="btn-primary flex-1 text-sm py-2"
                           disabled={authLoading || (user === null && requiresLogin === false)}
                         >
-                          <FaPaperPlane className="mr-1" /> Contact
+                          <FaPaperPlane className="mr-1" style={{fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}/> Contact
                         </button>
                       </div>
                     </div>
