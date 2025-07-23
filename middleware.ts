@@ -7,12 +7,6 @@ export async function middleware(req: NextRequest) {
   console.log('=== MIDDLEWARE RUNNING ===')
   console.log('Path:', req.nextUrl.pathname)
   
-  // Simple test - redirect all requests to /locator to /api/auth/login
-  if (req.nextUrl.pathname === '/locator') {
-    console.log('Redirecting /locator to login')
-    return NextResponse.redirect(new URL('/api/auth/login', req.url))
-  }
-  
   const res = NextResponse.next()
   
   // Get the auth cookie

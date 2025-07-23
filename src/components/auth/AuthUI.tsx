@@ -51,6 +51,7 @@ export default function AuthUI({
         view={view}
         showLinks={showLinks}
         socialLayout="horizontal"
+
       />
     </div>
   )

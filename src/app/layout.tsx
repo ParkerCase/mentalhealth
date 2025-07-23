@@ -47,6 +47,7 @@ export default function RootLayout({
       <head>
         <title>Social Connection Platform</title>
         <meta name="description" content="Connect with groups and individuals in your community" />
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
       </head>
       <body className={inter.className}>
         <div className="flex flex-col min-h-screen">
