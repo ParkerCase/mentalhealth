@@ -1,13 +1,13 @@
 import dynamic from 'next/dynamic';
 import React, { useRef, useEffect, useState, useMemo, forwardRef, useImperativeHandle, useCallback } from 'react';
-import { TextureLoader, Mesh, MeshPhongMaterial, SphereGeometry, DoubleSide, BufferGeometry, Float32BufferAttribute, Points, ShaderMaterial, Color, CylinderGeometry, Group as ThreeGroup, Vector3, MeshBasicMaterial } from 'three';
+import { TextureLoader, Mesh, MeshPhongMaterial, SphereGeometry, DoubleSide, BufferGeometry, Float32BufferAttribute, Points, ShaderMaterial, Color, CylinderGeometry, Group as ThreeGroup, Vector3, MeshBasicMaterial, Vector2 } from 'three';
 import type { FormEvent } from 'react';
 
 // Dynamic import for react-globe.gl (client-only)
 const Globe = dynamic(() => import('react-globe.gl'), { 
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-full w-full bg-[#292929]">
+    <div className="flex items-center justify-center h-full w-full bg-[#2a2a2a]">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
         <p className="text-white">Loading Interactive Globe...</p>
@@ -28,13 +28,6 @@ export interface Group {
   state?: string;
 }
 
-// Add HexBinPoint type
-interface HexBinPoint {
-  lat: number;
-  lng: number;
-  weight: number;
-}
-
 export interface RealisticDayNightGlobeProps {
   groups?: Group[];
   selectedGroupId?: string;
@@ -50,47 +43,108 @@ export interface RealisticDayNightGlobeProps {
   onSearch?: () => void;
   searchBarStyle?: React.CSSProperties;
   globeScale?: number;
+  showTime?: boolean;
+  showMarkers?: boolean;
 }
 
-const DAY_TEXTURE = '/assets/earth-map.jpg';
-const NIGHT_TEXTURE = '/assets/earth-night.jpg';
-const CLOUDS_TEXTURE = '/assets/earth-clouds.png';
-const BUMP_TEXTURE = '/assets/earth-normal-map.jpg';
-const SPECULAR_TEXTURE = '/assets/earth-specular-map.jpg';
+// Realistic Earth textures for day/night cycle
+const DAY_TEXTURE = 'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-day.jpg';
+const NIGHT_TEXTURE = 'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg';
+const CLOUDS_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-clouds.png';
+const BUMP_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
+const BACKGROUND_TEXTURE = 'https://cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png';
 
-// Optimized major cities - reduced to key global cities only
-const MAJOR_CITIES = [
-  { name: 'New York', lat: 40.7128, lng: -74.0060 },
-  { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
-  { name: 'Chicago', lat: 41.8781, lng: -87.6298 },
-  { name: 'London', lat: 51.5074, lng: -0.1278 },
-  { name: 'Paris', lat: 48.8566, lng: 2.3522 },
-  { name: 'Tokyo', lat: 35.6895, lng: 139.6917 },
-  { name: 'Sydney', lat: -33.8688, lng: 151.2093 },
-  { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
-  { name: 'São Paulo', lat: -23.5505, lng: -46.6333 },
-  { name: 'Mexico City', lat: 19.4326, lng: -99.1332 },
-  { name: 'Cairo', lat: 30.0444, lng: 31.2357 },
-  { name: 'Beijing', lat: 39.9042, lng: 116.4074 },
-  { name: 'Bangkok', lat: 13.7563, lng: 100.5018 },
-  { name: 'Moscow', lat: 55.7558, lng: 37.6173 },
-  { name: 'Lagos', lat: 6.5244, lng: 3.3792 },
-  { name: 'Istanbul', lat: 41.0082, lng: 28.9784 },
-  { name: 'Berlin', lat: 52.5200, lng: 13.4050 },
-  { name: 'Buenos Aires', lat: -34.6037, lng: -58.3816 },
-  { name: 'Toronto', lat: 43.6532, lng: -79.3832 },
-  { name: 'Dubai', lat: 25.2048, lng: 55.2708 },
-  { name: 'Hong Kong', lat: 22.3193, lng: 114.1694 },
-  { name: 'Singapore', lat: 1.3521, lng: 103.8198 },
-  { name: 'Seoul', lat: 37.5665, lng: 126.9780 },
-  { name: 'Madrid', lat: 40.4168, lng: -3.7038 },
-  { name: 'Rome', lat: 41.9028, lng: 12.4964 },
-  { name: 'Amsterdam', lat: 52.3676, lng: 4.9041 },
-  { name: 'Zurich', lat: 47.3769, lng: 8.5417 },
-  { name: 'Stockholm', lat: 59.3293, lng: 18.0686 },
-  { name: 'Cape Town', lat: -33.9249, lng: 18.4241 },
-  { name: 'Nairobi', lat: -1.2921, lng: 36.8219 }
-];
+// Custom shader: Blends night and day images to simulate day/night cycle
+const dayNightShader = {
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    #define PI 3.141592653589793
+    uniform sampler2D dayTexture;
+    uniform sampler2D nightTexture;
+    uniform vec2 sunPosition;
+    uniform vec2 globeRotation;
+    varying vec3 vNormal;
+    varying vec2 vUv;
+
+    float toRad(in float a) {
+      return a * PI / 180.0;
+    }
+
+    vec3 Polar2Cartesian(in vec2 c) { // [lng, lat]
+      float theta = toRad(90.0 - c.x);
+      float phi = toRad(90.0 - c.y);
+      return vec3( // x,y,z
+        sin(phi) * cos(theta),
+        cos(phi),
+        sin(phi) * sin(theta)
+      );
+    }
+
+    void main() {
+      float invLon = toRad(globeRotation.x);
+      float invLat = -toRad(globeRotation.y);
+      mat3 rotX = mat3(
+        1, 0, 0,
+        0, cos(invLat), -sin(invLat),
+        0, sin(invLat), cos(invLat)
+      );
+      mat3 rotY = mat3(
+        cos(invLon), 0, sin(invLon),
+        0, 1, 0,
+        -sin(invLon), 0, cos(invLon)
+      );
+      vec3 rotatedSunDirection = rotX * rotY * Polar2Cartesian(sunPosition);
+      float intensity = dot(normalize(vNormal), normalize(rotatedSunDirection));
+      vec4 dayColor = texture2D(dayTexture, vUv);
+      vec4 nightColor = texture2D(nightTexture, vUv);
+      float blendFactor = smoothstep(-0.1, 0.1, intensity);
+      gl_FragColor = mix(nightColor, dayColor, blendFactor);
+    }
+  `
+};
+
+// Solar calculator functions
+const solar = {
+  century: (dt: number) => (new Date(dt).getTime() - new Date('2000-01-01T12:00:00Z').getTime()) / (36525 * 24 * 60 * 60 * 1000),
+  equationOfTime: (t: number) => {
+    const L0 = 280.46645 + 36000.76983 * t + 0.0003032 * t * t;
+    const M = 357.52910 + 35999.05030 * t - 0.0001559 * t * t - 0.00000048 * t * t * t;
+    const e = 0.016708617 - 0.000042037 * t - 0.0000001236 * t * t;
+    const C = (1.914600 - 0.004817 * t - 0.000014 * t * t) * Math.sin(M * Math.PI / 180) +
+              (0.019993 - 0.000101 * t) * Math.sin(2 * M * Math.PI / 180) +
+              0.000290 * Math.sin(3 * M * Math.PI / 180);
+    const Theta = L0 + C;
+    const v = M + C;
+    const R = 1.000001018 * (1 - e * e) / (1 + e * Math.cos(v * Math.PI / 180));
+    return (L0 - 0.0057183 - Theta + 0.0000000008 * R * R) * 4;
+  },
+  declination: (t: number) => {
+    const L0 = 280.46645 + 36000.76983 * t + 0.0003032 * t * t;
+    const M = 357.52910 + 35999.05030 * t - 0.0001559 * t * t - 0.00000048 * t * t * t;
+    const e = 0.016708617 - 0.000042037 * t - 0.0000001236 * t * t;
+    const C = (1.914600 - 0.004817 * t - 0.000014 * t * t) * Math.sin(M * Math.PI / 180) +
+              (0.019993 - 0.000101 * t) * Math.sin(2 * M * Math.PI / 180) +
+              0.000290 * Math.sin(3 * M * Math.PI / 180);
+    const Theta = L0 + C;
+    const epsilon = 23.439 - 0.0000004 * t;
+    return Math.asin(Math.sin(epsilon * Math.PI / 180) * Math.sin(Theta * Math.PI / 180)) * 180 / Math.PI;
+  }
+};
+
+const sunPosAt = (dt: number) => {
+  const day = new Date(+dt).setUTCHours(0, 0, 0, 0);
+  const t = solar.century(dt);
+  const longitude = (day - dt) / 864e5 * 360 - 180;
+  return [longitude - solar.equationOfTime(t) / 4, solar.declination(t)];
+};
 
 const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
   groups = [],
@@ -107,11 +161,15 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
   onSearch,
   searchBarStyle,
   globeScale = 1.0,
+  showTime = true,
+  showMarkers = false,
 }, ref) => {
   const globeEl = useRef<any>();
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 800, height: 600 });
   const [isGlobeReady, setIsGlobeReady] = useState(false);
   const [globeError, setGlobeError] = useState<string | null>(null);
+  const [globeMaterial, setGlobeMaterial] = useState<any>();
+  const [currentTime, setCurrentTime] = useState(+new Date());
   
   // Search state
   const [searchValue, setSearchValue] = useState('');
@@ -134,7 +192,7 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
     
     const handleResize = () => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(updateDimensions, 100); // Throttle resize events
+      timeoutId = setTimeout(updateDimensions, 100);
     };
     
     window.addEventListener('resize', handleResize);
@@ -144,6 +202,51 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
     };
   }, [updateDimensions]);
 
+  // Time animation
+  useEffect(() => {
+    const VELOCITY = 1; // minutes per frame
+    let animationId: number;
+    
+    const iterateTime = () => {
+      setCurrentTime(prev => prev + VELOCITY * 60 * 1000);
+      animationId = requestAnimationFrame(iterateTime);
+    };
+    
+    iterateTime();
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, []);
+
+  // Load shader material
+  useEffect(() => {
+    Promise.all([
+      new TextureLoader().loadAsync(DAY_TEXTURE),
+      new TextureLoader().loadAsync(NIGHT_TEXTURE)
+    ]).then(([dayTexture, nightTexture]) => {
+      setGlobeMaterial(new ShaderMaterial({
+        uniforms: {
+          dayTexture: { value: dayTexture },
+          nightTexture: { value: nightTexture },
+          sunPosition: { value: new Vector2() },
+          globeRotation: { value: new Vector2() }
+        },
+        vertexShader: dayNightShader.vertexShader,
+        fragmentShader: dayNightShader.fragmentShader
+      }));
+    });
+  }, []);
+
+  // Update Sun position
+  useEffect(() => {
+    if (globeMaterial?.uniforms?.sunPosition) {
+      globeMaterial.uniforms.sunPosition.value.set(...sunPosAt(currentTime));
+    }
+  }, [currentTime, globeMaterial]);
+
   // Globe ready handler
   const handleGlobeReady = useCallback(() => {
     try {
@@ -151,7 +254,7 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
         // Auto-rotation
         if (autoRotate) {
           globeEl.current.controls().autoRotate = true;
-          globeEl.current.controls().autoRotateSpeed = 0.5;
+          globeEl.current.controls().autoRotateSpeed = 0.3;
         }
         
         // Fly to initial coordinates
@@ -171,9 +274,10 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
     }
   }, [autoRotate, initialCoordinates]);
 
-  // Prepare marker data with memoization
+  // Prepare marker data with memoization (only if showMarkers is true)
   type GroupMarker = Group & { lat: number; lng: number; isSelected: boolean };
   const groupMarkers: GroupMarker[] = useMemo(() => {
+    if (!showMarkers) return [];
     return groups
       .filter(g => g.geo_location && g.geo_location.coordinates.length === 2)
       .map(g => ({
@@ -182,22 +286,11 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
         lng: g.geo_location!.coordinates[0],
         isSelected: selectedGroupId === g.id
       }));
-  }, [groups, selectedGroupId]);
+  }, [groups, selectedGroupId, showMarkers]);
 
-  // Optimized hex points with memoization - only major cities
-  const hexPoints = useMemo(() => {
-    return MAJOR_CITIES.map(city => ({
-      lat: city.lat,
-      lng: city.lng,
-      weight: 2, // Reduced weight for better performance
-      isMajor: true
-    }));
-  }, []);
-
-  // Marker click handler - Updated to match Globe component signature
+  // Marker click handler (only if showMarkers is true)
   const handleMarkerClick = useCallback((point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {
-    if (interactive && onGroupSelect) {
-      // Find the corresponding group marker by coordinates
+    if (showMarkers && interactive && onGroupSelect) {
       const marker = groupMarkers.find(m => 
         Math.abs(m.lat - coords.lat) < 0.001 && 
         Math.abs(m.lng - coords.lng) < 0.001
@@ -206,7 +299,7 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
         onGroupSelect(marker);
       }
     }
-  }, [interactive, onGroupSelect, groupMarkers]);
+  }, [showMarkers, interactive, onGroupSelect, groupMarkers]);
 
   // Optimized search with debouncing
   const handleSearch = useCallback(async (e: FormEvent) => {
@@ -239,81 +332,6 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
     }
   }, [searchValue, onSearch]);
 
-  // Optimized atmosphere background
-  const BackgroundAtmosphereCanvas = React.memo(() => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      let animationId: number;
-      
-      const draw = () => {
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        
-        const w = Math.min(window.innerWidth, 1920); // Cap at 1920px for performance
-        const h = Math.min(window.innerHeight, 1080); // Cap at 1080px for performance
-        
-        if (canvas.width !== w || canvas.height !== h) {
-          canvas.width = w;
-          canvas.height = h;
-        }
-        
-        ctx.clearRect(0, 0, w, h);
-        
-        // Simplified gradient for better performance
-        const cx = w / 2;
-        const cy = h / 2.1;
-        const radius = Math.min(w, h) * 0.44;
-        
-        const grad = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
-        grad.addColorStop(0, 'rgba(58,108,255,0.35)');
-        grad.addColorStop(0.7, 'rgba(58,108,255,0.15)');
-        grad.addColorStop(1, 'rgba(255,224,102,0.1)');
-        
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-        ctx.restore();
-      };
-      
-      draw();
-      
-      const handleResize = () => {
-        cancelAnimationFrame(animationId);
-        animationId = requestAnimationFrame(draw);
-      };
-      
-      window.addEventListener('resize', handleResize);
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        cancelAnimationFrame(animationId);
-      };
-    }, []);
-    
-    return (
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 0,
-          pointerEvents: 'none',
-          display: 'block',
-        }}
-      />
-    );
-  });
-
-  BackgroundAtmosphereCanvas.displayName = 'BackgroundAtmosphereCanvas';
-
   // Expose pointOfView to parent via ref
   useImperativeHandle(ref, () => ({
     pointOfView: (...args: any[]) => {
@@ -326,7 +344,7 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
   // Error boundary fallback
   if (globeError) {
     return (
-      <div className="flex items-center justify-center h-full w-full bg-[#292929] text-white">
+      <div className="flex items-center justify-center h-full w-full bg-[#2a2a2a] text-white">
         <div className="text-center">
           <p className="text-red-400 mb-4">Failed to load globe visualization</p>
           <button 
@@ -349,13 +367,11 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
         overflow: 'hidden', 
         transform: `scale(${globeScale})`, 
         transformOrigin: 'center',
+        backgroundColor: '#0B1426',
         ...style 
       }}
     >
-      {/* Blue-to-orange glow background overlay */}
-      {showAtmosphereBackground && <BackgroundAtmosphereCanvas />}
-      
-      {/* Globe component */}
+      {/* Globe component with shader-based day/night cycle */}
       <div style={{
         position: 'absolute',
         left: 0,
@@ -369,26 +385,44 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
           ref={globeEl}
           width={dimensions.width}
           height={dimensions.height}
-          globeImageUrl={NIGHT_TEXTURE}
-          bumpImageUrl={BUMP_TEXTURE}
-          hexBinPointsData={hexPoints}
-          hexBinPointLat={(d: any) => d.lat}
-          hexBinPointLng={(d: any) => d.lng}
-          hexBinResolution={4} // Reduced for better performance
-          hexBinMerge={true}
-          pointsData={groupMarkers}
-          pointLat={(d: any) => d.lat}
-          pointLng={(d: any) => d.lng}
-          pointAltitude={0.02}
-          pointRadius={1.0}
-          pointColor={(d: any) => d.isSelected ? '#FFD700' : '#FF6B47'}
-          onPointClick={handleMarkerClick}
-          atmosphereColor="#FFD9A0"
-          atmosphereAltitude={0.15}
+          globeMaterial={globeMaterial}
+          backgroundImageUrl={BACKGROUND_TEXTURE}
+          {...(showMarkers && {
+            pointsData: groupMarkers,
+            pointLat: (d: any) => d.lat,
+            pointLng: (d: any) => d.lng,
+            pointAltitude: 0.02,
+            pointRadius: 1.0,
+            pointColor: (d: any) => d.isSelected ? '#FFD700' : '#FF6B47',
+            onPointClick: handleMarkerClick
+          })}
           onGlobeReady={handleGlobeReady}
+          onZoom={useCallback(({ lng, lat }: any) => {
+            if (globeMaterial?.uniforms?.globeRotation) {
+              globeMaterial.uniforms.globeRotation.value.set(lng, lat);
+            }
+          }, [globeMaterial])}
           enablePointerInteraction={interactive}
         />
       </div>
+      
+      {/* Time display */}
+      {showTime && (
+        <div style={{
+          position: 'absolute',
+          bottom: '8px',
+          left: '8px',
+          color: 'lightblue',
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          zIndex: 10,
+          background: 'rgba(0,0,0,0.5)',
+          padding: '4px 8px',
+          borderRadius: '4px'
+        }}>
+          {new Date(currentTime).toLocaleString()}
+        </div>
+      )}
       
       {/* Search functionality */}
       {showSearch && (
@@ -417,29 +451,6 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
           )}
         </form>
       )}
-      
-      {/* Optimized CSS for hex bin colors */}
-      <style jsx>{`
-        :global(.globe-hexbin-hex) {
-          transition: fill 0.3s ease !important;
-        }
-        :global(.globe-hexbin-hex:nth-child(4n+1)) { 
-          fill: #ffe066 !important; 
-          stroke: #ffe066 !important; 
-        }
-        :global(.globe-hexbin-hex:nth-child(4n+2)) { 
-          fill: #ffb347 !important; 
-          stroke: #ffb347 !important; 
-        }
-        :global(.globe-hexbin-hex:nth-child(4n+3)) { 
-          fill: #ff7f11 !important; 
-          stroke: #ff7f11 !important; 
-        }
-        :global(.globe-hexbin-hex:nth-child(4n+4)) { 
-          fill: #ff2d00 !important; 
-          stroke: #ff2d00 !important; 
-        }
-      `}</style>
     </div>
   );
 });

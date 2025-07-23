@@ -175,11 +175,11 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#292929] overflow-hidden">
+    <main className="min-h-screen bg-[#404040] overflow-hidden">
       {/* Hero Section with full-height globe visualization */}
       <section className="relative h-screen flex items-center overflow-visible">
-        {/* Background globe visualization */}
-        <div className="absolute inset-0 w-full h-full z-0 overflow-visible pointer-events-none">
+        {/* Background globe visualization - significantly brightened */}
+        <div className="absolute inset-0 w-full h-full z-0 overflow-visible pointer-events-none bg-[#2a2a2a]">
           <ErrorBoundary>
             <Suspense fallback={
               <div className="h-screen w-full flex items-center justify-center">
@@ -201,8 +201,8 @@ export default function Home() {
           </ErrorBoundary>
         </div>
         
-        {/* Gradient overlay for better text visibility */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent z-5"></div>
+        {/* Gradient overlay for better text visibility - significantly brightened */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/5 to-transparent z-5"></div>
         
         {/* Selected group info */}
         {selectedGroupId && (
@@ -262,11 +262,11 @@ export default function Home() {
         </div>
         
         {/* Gradient transition to the next section */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#292929] to-transparent z-10"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#404040] to-transparent z-10"></div>
       </section>
       
       {/* How It Works Section */}
-      <section className="py-20 bg-[#292929]">
+      <section className="py-20 bg-[#404040]">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-light text-center mb-16 tracking-wider">How It <span className="font-semibold">Works</span></h2>
           
@@ -305,7 +305,7 @@ export default function Home() {
       </section>
       
       {/* Benefits Section - Simplified for better performance */}
-      <section className="py-20 bg-[#1e1e1e]">
+      <section className="py-20 bg-[#2a2a2a]">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-light text-center mb-16 tracking-wider">Why <span className="font-semibold">Join Us</span></h2>
           

@@ -82,12 +82,12 @@ const RealisticGlobePerformance: React.FC<RealisticGlobeProps> = ({
       const scene = viewer.scene;
       
       // Set background color
-      scene.backgroundColor = Cesium.Color.BLACK;
+      scene.backgroundColor = Cesium.Color.fromCssColorString('#2a2a2a'); // Significantly brightened background
       
       // Configure lighting and atmosphere
       const globe = scene.globe;
       globe.enableLighting = true;
-      globe.baseColor = Cesium.Color.BLUE;
+      globe.baseColor = Cesium.Color.fromCssColorString('#2a2a5a'); // Significantly brightened base color
       
       // Performance settings
       switch(performanceLevel) {

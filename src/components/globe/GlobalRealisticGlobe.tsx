@@ -151,13 +151,13 @@ const GlobalRealisticGlobe = forwardRef<any, GlobalRealisticGlobeProps>((props, 
         const globe = scene.globe;
         
         // Configure viewer basics
-        scene.backgroundColor = Cesium.Color.BLACK;
+        scene.backgroundColor = Cesium.Color.fromCssColorString('#2a2a2a'); // Significantly brightened background
         scene.moon = undefined as any; // Remove default moon
         scene.sun = undefined as any; // Remove default sun (we'll create our own)
         
         // Enhanced day/night cycle settings
         globe.enableLighting = true;
-        globe.baseColor = Cesium.Color.fromCssColorString('#23374d'); // Deeper ocean color
+        globe.baseColor = Cesium.Color.fromCssColorString('#3d5a6f'); // Significantly brightened ocean color
         globe.showGroundAtmosphere = true;
         
         // Create enhanced sun
@@ -922,7 +922,7 @@ const customSun = new Cesium.Sun();
       height: height, 
       position: 'relative',
       overflow: 'hidden',
-      backgroundColor: '#000'
+      backgroundColor: '#2a2a2a' // Significantly brightened background
     }}>
       <div 
         ref={containerRef} 

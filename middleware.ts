@@ -42,6 +42,7 @@ export async function middleware(req: NextRequest) {
     '/dashboard',
     '/admin',
     '/groups/register',
+    '/locator',
   ]
   
   // Get the pathname from the request
@@ -52,13 +53,8 @@ export async function middleware(req: NextRequest) {
     path === protectedPath || path.startsWith(`${protectedPath}/`)
   )
   
-  // Special case for locator page - only require login when trying to contact a group
-  const isLocatorContactAttempt = path === '/locator' && 
-    (req.nextUrl.searchParams.get('action') === 'contact' || 
-     req.method === 'POST')
-    
   // If this is a protected path and the user is not logged in, redirect to login
-  if ((isProtectedPath || isLocatorContactAttempt) && !isAuthenticated) {
+  if (isProtectedPath && !isAuthenticated) {
     // Create the redirect URL with the current path as the redirectUrl query parameter
     const redirectUrl = new URL('/api/auth/login', req.url)
     redirectUrl.searchParams.set('redirectUrl', path)

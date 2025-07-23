@@ -126,7 +126,7 @@ export function configureViewer(viewer: Cesium.Viewer): void {
     }
     
     // Set space background
-    viewer.scene.backgroundColor = Cesium.Color.BLACK;
+    viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#2a2a2a'); // Significantly brightened background
     
     // Enable anti-aliasing if available
     if (viewer.scene.postProcessStages?.fxaa) {

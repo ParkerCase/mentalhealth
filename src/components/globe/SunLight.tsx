@@ -49,7 +49,7 @@ const SunLight: React.FC<SunLightProps> = ({
       }
       
       // Ensure scene has proper space background
-      scene.backgroundColor = Cesium.Color.BLACK;
+      scene.backgroundColor = Cesium.Color.fromCssColorString('#2a2a2a'); // Significantly brightened background
       
       // Show the sun
       if (scene.sun) {

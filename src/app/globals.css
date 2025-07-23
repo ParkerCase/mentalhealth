@@ -3,25 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --primary-dark: #292929;
-  --secondary-dark: #1e1e1e;
+  --primary-dark: #404040;
+  --secondary-dark: #2a2a2a;
   --text-light: #ffffff;
   --accent-blue: #3b82f6;
 
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 41, 41, 41;
-  --background-end-rgb: 29, 29, 29;
+  --background-start-rgb: 64, 64, 64;
+  --background-end-rgb: 42, 42, 42;
 }
 
 html {
-  background-color: #292929;
+  background-color: #404040;
   color-scheme: dark;
   scroll-behavior: smooth;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: #292929;
+  background: #404040;
   min-height: 100vh;
   font-family: Inter, "Helvetica Neue", Arial, sans-serif;
   padding-top: 0;
@@ -29,7 +29,12 @@ body {
 }
 
 /* Refined Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 300;
   letter-spacing: -0.02em;
   color: var(--text-light);
@@ -65,21 +70,25 @@ a {
   body {
     font-size: 14px;
   }
-  
+
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
   }
-  
+
   /* Better touch targets */
-  button, .btn-primary, .btn-secondary {
+  button,
+  .btn-primary,
+  .btn-secondary {
     min-height: 44px;
     min-width: 44px;
     padding: 0.75rem 1rem;
   }
-  
+
   /* Improved form elements for mobile */
-  input, textarea, select {
+  input,
+  textarea,
+  select {
     font-size: 16px; /* Prevents zoom on iOS */
     padding: 0.75rem;
   }
@@ -91,18 +100,18 @@ a {
     transform: scale(0.9);
     transform-origin: center;
   }
-  
+
   /* Stack navigation vertically on very small screens */
   .nav-mobile {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   /* Adjust padding for mobile */
   .mobile-padding {
     padding: 1rem;
   }
-  
+
   /* Full width cards on mobile */
   .card {
     margin: 0.5rem;
@@ -115,7 +124,7 @@ a {
   .hover\:bg-white\/10:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
-  
+
   .hover\:bg-gray-50:hover {
     background-color: #f9fafb;
   }
@@ -234,7 +243,7 @@ body.locator-page main {
   main {
     padding-top: 70px;
   }
-  
+
   body.home-page main,
   body.locator-page main {
     padding-top: 0;
@@ -270,20 +279,20 @@ body.locator-page main {
   .nav-link-active {
     @apply text-white border-b border-white/30 px-3 py-2 text-sm uppercase tracking-wider;
   }
-  
+
   /* Mobile-specific utilities */
   .mobile-container {
     @apply px-4 sm:px-6 lg:px-8;
   }
-  
+
   .mobile-grid {
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
   }
-  
+
   .mobile-text {
     @apply text-sm sm:text-base;
   }
-  
+
   .mobile-button {
     @apply w-full sm:w-auto justify-center sm:justify-start;
   }
@@ -348,7 +357,7 @@ body.locator-page main {
     left: 1rem;
     width: auto;
   }
-  
+
   .chatbot-window {
     position: fixed;
     bottom: 80px;
@@ -366,7 +375,8 @@ body.locator-page main {
 }
 
 /* Prevent horizontal scroll on mobile */
-body, html {
+body,
+html {
   overflow-x: hidden;
   width: 100%;
 }

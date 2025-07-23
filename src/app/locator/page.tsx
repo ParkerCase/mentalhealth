@@ -20,7 +20,7 @@ export default function Locator() {
   const [groups, setGroups] = useState<GroupData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedGroup, setSelectedGroup] = useState<GroupData | null>(null)
-  const [requiresLogin, setRequiresLogin] = useState(false)
+
   const [initialCoordinates, setInitialCoordinates] = useState<{lat: number, lng: number} | undefined>(undefined)
   const [autoRotate, setAutoRotate] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
@@ -253,8 +253,7 @@ export default function Locator() {
   
   // Send message to a group
   const sendMessage = async (groupId: string) => {
-    if (!user && !authLoading) {
-      setRequiresLogin(true)
+    if (!user) {
       return
     }
     
@@ -345,37 +344,7 @@ export default function Locator() {
   
   return (
     <div className="min-h-screen bg-[#292929] overflow-x-hidden">
-      {/* Login notification panel - Mobile optimized */}
-      {requiresLogin && (
-        <div className={`fixed z-50 bg-[#4A3E33] border-l-2 border-[#FFD700] p-4 rounded-sm backdrop-blur-sm shadow-lg ${
-          isMobile 
-            ? 'top-16 left-4 right-4' 
-            : 'top-20 left-1/2 transform -translate-x-1/2 w-full max-w-lg'
-        }`}>
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <FaInfoCircle className="text-[#FFD700] mt-1" />
-            </div>
-            <div className="ml-4 flex-1">
-              <p className="text-sm text-white/80">
-                You need to be logged in to contact groups. {' '}
-                <Link href="/api/auth/login?redirectUrl=/locator" className="text-blue-400 hover:text-blue-300 underline">
-                  Login
-                </Link> or {' '}
-                <Link href="/api/auth/register?redirectUrl=/locator" className="text-blue-400 hover:text-blue-300 underline">
-                  Register
-                </Link> to continue.
-              </p>
-              <button 
-                className="mt-2 text-xs text-gray-300 hover:text-white touch-manipulation"
-                onClick={() => setRequiresLogin(false)}
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
       
       {/* Main Globe Visualization - FULLSCREEN, HERO OVERLAY */}
       <div className="relative w-screen h-screen overflow-hidden" style={{margin: 0, padding: 0}}>
@@ -559,7 +528,7 @@ export default function Locator() {
                     className={`btn-primary flex items-center justify-center touch-manipulation min-h-[44px] ${
                       isMobile ? 'w-full' : ''
                     }`}
-                    disabled={authLoading || (user === null && requiresLogin === false)}
+                    disabled={authLoading}
                   >
                     <FaPaperPlane className="mr-2" /> Contact Group
                   </button>
@@ -668,7 +637,7 @@ export default function Locator() {
                           onClick={() => sendMessage(group.id)}
                           style={{fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
                           className="btn-primary flex-1 text-sm py-2"
-                          disabled={authLoading || (user === null && requiresLogin === false)}
+                          disabled={authLoading}
                         >
                           <FaPaperPlane className="mr-1" /> Contact
                         </button>

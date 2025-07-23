@@ -113,7 +113,7 @@ const RealisticGlobe: React.FC<RealisticGlobeProps> = ({
     globe.show = true;
     
     // Set base color when tiles aren't loaded yet
-    globe.baseColor = Cesium.Color.DARKBLUE;
+    globe.baseColor = Cesium.Color.fromCssColorString('#2a2a5a'); // Significantly brightened base color
     
     // Configure lighting
     globe.enableLighting = true;
@@ -122,7 +122,7 @@ const RealisticGlobe: React.FC<RealisticGlobeProps> = ({
     globe.depthTestAgainstTerrain = false;
     
     // Configure the scene background
-    scene.backgroundColor = Cesium.Color.BLACK;
+    scene.backgroundColor = Cesium.Color.fromCssColorString('#2a2a2a'); // Significantly brightened background
     
     // Show sky atmosphere
     if (scene.skyAtmosphere) {
