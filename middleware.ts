@@ -4,6 +4,15 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
+  console.log('=== MIDDLEWARE RUNNING ===')
+  console.log('Path:', req.nextUrl.pathname)
+  
+  // Simple test - redirect all requests to /locator to /api/auth/login
+  if (req.nextUrl.pathname === '/locator') {
+    console.log('Redirecting /locator to login')
+    return NextResponse.redirect(new URL('/api/auth/login', req.url))
+  }
+  
   const res = NextResponse.next()
   
   // Get the auth cookie
@@ -55,6 +64,7 @@ export async function middleware(req: NextRequest) {
   
   // If this is a protected path and the user is not logged in, redirect to login
   if (isProtectedPath && !isAuthenticated) {
+    console.log('Redirecting unauthenticated user from:', path, 'to login page')
     // Create the redirect URL with the current path as the redirectUrl query parameter
     const redirectUrl = new URL('/api/auth/login', req.url)
     redirectUrl.searchParams.set('redirectUrl', path)
@@ -68,14 +78,11 @@ export async function middleware(req: NextRequest) {
 // Only run middleware on specific paths
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     * - api/auth/callback (auth callback)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public|api/auth/callback).*)',
+    '/locator',
+    '/profile',
+    '/messages',
+    '/dashboard',
+    '/admin',
+    '/groups/register',
   ],
 }
