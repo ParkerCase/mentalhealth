@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     } else if (message.toLowerCase().includes('help') || message.toLowerCase().includes('resource')) {
       response = "We offer various resources including support groups, educational materials, and professional referrals. What specific type of help are you looking for?"
     } else if (message.toLowerCase().includes('contact') || message.toLowerCase().includes('reach')) {
-      response = "You can contact our support team at support@example.com or visit our Contact page for more information."
+      response = "You can contact our support team at info@arisedivinemasculine.com or visit our Contact page for more information."
     } else {
       response = "Thank you for your message. How can I assist you with finding support groups or resources today?"
     }

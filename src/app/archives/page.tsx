@@ -287,7 +287,7 @@ export default function Archives() {
                     </div>
                   </a>
                 </li>
-                <li>
+                {/* <li>
                   <a
                     href="#"
                     className="flex items-start hover:bg-gray-50 p-2 rounded-md"
@@ -314,7 +314,7 @@ export default function Archives() {
                       <p className="text-sm text-gray-500">Step-by-step guide</p>
                     </div>
                   </a>
-                </li>
+                </li> */}
               </ul>
             </div>
           </div>

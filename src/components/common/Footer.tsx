@@ -7,7 +7,7 @@ export default function Footer() {
             <div>
               <h3 className="text-xl font-light tracking-wider mb-6">AriseDivineMasculine</h3>
               <p className="text-gray-400 font-light tracking-wide mb-6">
-                Connecting people to community support groups since 2023.(need clarification)
+                Connecting people to community support groups since 2025.
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">

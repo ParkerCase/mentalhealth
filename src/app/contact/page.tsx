@@ -38,18 +38,26 @@ export default function ContactPage() {
         throw new Error('Please fill out all required fields')
       }
 
-      // Submit to Supabase
-      const { error: submissionError } = await supabase
-        .from('contact_submissions')
-        .insert({
+      // Submit to our API route which handles both database storage and email notification
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           name: formData.name,
           email: formData.email,
           subject: formData.subject,
           message: formData.message,
           user_id: user?.id || null
         })
+      })
 
-      if (submissionError) throw submissionError
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit contact form')
+      }
 
       // Clear form on success
       setFormData({
@@ -223,7 +231,7 @@ export default function ContactPage() {
                 </div>
               </div>
               
-              <div className="flex items-start">
+              {/* <div className="flex items-start">
                 <div className="flex-shrink-0 mt-1">
                   <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -237,9 +245,9 @@ export default function ContactPage() {
                     </a>
                   </p>
                 </div>
-              </div>
+              </div> */}
               
-              <div className="flex items-start">
+              {/* <div className="flex items-start">
                 <div className="flex-shrink-0 mt-1">
                   <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -254,7 +262,7 @@ export default function ContactPage() {
                     Holladay, UT 84117
                   </p>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
           
