@@ -11,10 +11,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Name, email, and message are required' }, { status: 400 })
     }
 
-    // Create Supabase client
+    // Create Supabase client with service role key for admin privileges
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { cookies: { get: () => '', set: () => {}, remove: () => {} } }
     )
 
@@ -32,6 +32,12 @@ export async function POST(req: NextRequest) {
 
     if (dbError) {
       console.error('Database error:', dbError)
+      console.error('Error details:', {
+        code: dbError.code,
+        message: dbError.message,
+        details: dbError.details,
+        hint: dbError.hint
+      })
       return NextResponse.json({ error: 'Failed to save contact submission' }, { status: 500 })
     }
 
