@@ -47,6 +47,10 @@ export default function RootLayout({
       <head>
         <title>Social Connection Platform</title>
         <meta name="description" content="Connect with groups and individuals in your community" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="theme-color" content="#292929" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
       </head>
       <body className={inter.className}>

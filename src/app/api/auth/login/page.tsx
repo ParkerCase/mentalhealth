@@ -45,11 +45,11 @@ function LoginPageInner() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-white">
+    <div className="flex flex-col lg:flex-row min-h-screen">
+      <div className="flex-1 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="mx-auto w-full max-w-md">
           <div className="text-center">
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+            <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
             <p className="mt-2 text-sm text-gray-600">
               Or{' '}
               <Link href="/api/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
@@ -58,7 +58,7 @@ function LoginPageInner() {
             </p>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8">
             <AuthUI 
               view="sign_in" 
               redirectTo={redirectUrl}

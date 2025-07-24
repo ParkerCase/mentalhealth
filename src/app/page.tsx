@@ -224,30 +224,30 @@ export default function Home() {
         )}
         
         {/* Content overlay */}
-        <div className="container relative mx-auto px-6 z-10">
+        <div className="container relative mx-auto px-4 sm:px-6 z-10">
           <div className="max-w-3xl">
-            <h1 className="text-7xl font-extralight tracking-tight mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extralight tracking-tight mb-4 sm:mb-6">
               <span className="block opacity-90">Arise Divine Masculine</span>
-              <span className="block text-sm uppercase tracking-[0.2em] mt-3 mb-8 font-light">
+              <span className="block text-xs sm:text-sm uppercase tracking-[0.2em] mt-2 sm:mt-3 mb-4 sm:mb-8 font-light">
                 Find your community, wherever you are
               </span>
             </h1>
             
-            <p className="text-xl font-light text-gray-300 mb-12 max-w-lg opacity-80">
+            <p className="text-base sm:text-lg md:text-xl font-light text-gray-300 mb-8 sm:mb-12 max-w-lg opacity-80">
               Connect with support groups and communities in your area.
               Find your people, or offer support to others.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
               <Link
                 href="/locator"
-                className="btn-primary inline-block"
+                className="btn-primary inline-block mobile-button sm:w-auto"
               >
                 Find Groups
               </Link>
               <Link
                 href="/groups/register"
-                className="btn-secondary inline-block"
+                className="btn-secondary inline-block mobile-button sm:w-auto"
               >
                 Register Your Group
               </Link>
@@ -266,11 +266,11 @@ export default function Home() {
       </section>
       
       {/* How It Works Section */}
-      <section className="py-20 bg-[#404040]">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-light text-center mb-16 tracking-wider">How It <span className="font-semibold">Works</span></h2>
+      <section className="py-12 sm:py-20 bg-[#404040]">
+        <div className="container mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-light text-center mb-8 sm:mb-16 tracking-wider">How It <span className="font-semibold">Works</span></h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12">
             <div className="card backdrop-blur-md border border-white/5">
               <div className="w-16 h-16 flex items-center justify-center border border-white/10 rounded-sm mb-6">
                 <span className="text-2xl font-light">01</span>
