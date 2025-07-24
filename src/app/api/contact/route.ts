@@ -6,10 +6,20 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, subject, message, user_id } = await req.json()
     
+    console.log('Contact form submission received:', { name, email, subject, message: message?.substring(0, 50) + '...', user_id })
+    
     // Validate required fields
     if (!name || !email || !message) {
+      console.log('Validation failed:', { name: !!name, email: !!email, message: !!message })
       return NextResponse.json({ error: 'Name, email, and message are required' }, { status: 400 })
     }
+
+    // Check environment variables
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length
+    })
 
     // Create Supabase client with service role key for admin privileges
     const supabase = createServerClient(
@@ -18,17 +28,21 @@ export async function POST(req: NextRequest) {
       { cookies: { get: () => '', set: () => {}, remove: () => {} } }
     )
 
+    const submissionData = {
+      name,
+      email,
+      subject,
+      message,
+      user_id: user_id || null
+    }
+
+    console.log('Attempting to insert:', submissionData)
+
     // Store in database first
-    const { error: dbError } = await supabase
+    const { data, error: dbError } = await supabase
       .from('contact_submissions')
-      .insert({
-        name,
-        email,
-        subject,
-        message,
-        user_id: user_id || null,
-        status: 'new'
-      })
+      .insert(submissionData)
+      .select()
 
     if (dbError) {
       console.error('Database error:', dbError)
@@ -41,11 +55,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to save contact submission' }, { status: 500 })
     }
 
+    console.log('Database insertion successful:', data)
+
     // Send email notification using Resend
     try {
       const resend = new Resend(process.env.RESEND_API_KEY)
       
-      const { data, error } = await resend.emails.send({
+      const { data: emailData, error: emailError } = await resend.emails.send({
         from: 'AriseDivineMasculine <noreply@arisedivinemasculine.com>',
         to: ['info@arisedivinemasculine.com'],
         subject: `New Contact Form Submission: ${subject || 'No Subject'}`,
@@ -76,11 +92,11 @@ export async function POST(req: NextRequest) {
         `
       })
 
-      if (error) {
-        console.error('Resend email error:', error)
+      if (emailError) {
+        console.error('Resend email error:', emailError)
         // Don't fail the request if email fails, just log it
       } else {
-        console.log('Email sent successfully:', data)
+        console.log('Email sent successfully:', emailData)
       }
       
     } catch (emailError) {
