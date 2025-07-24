@@ -167,9 +167,20 @@ export default function Archives() {
                     </div>
                     <div className="p-4">
                       <h3 className="text-xl font-semibold mb-2">
-                        <Link href={`/archives/${article.id}`}>
-                          {article.title}
-                        </Link>
+                        {article.content.includes('[Read Full Article]') ? (
+                          <a 
+                            href="https://subconsciousservant.com/divine-masculine/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:text-blue-600 transition-colors"
+                          >
+                            {article.title}
+                          </a>
+                        ) : (
+                          <Link href={`/archives/${article.id}`}>
+                            {article.title}
+                          </Link>
+                        )}
                       </h3>
                       <div className="flex items-center text-gray-500 text-sm mb-3">
                         <span>{format(new Date(article.created_at), 'MMMM d, yyyy')}</span>
@@ -179,12 +190,23 @@ export default function Archives() {
                       <p className="text-gray-700 mb-3">
                         {truncateText(article.content, 150)}
                       </p>
-                      <Link
-                        href={`/archives/${article.id}`}
-                        className="text-blue-600 hover:underline text-sm"
-                      >
-                        Read more
-                      </Link>
+                      {article.content.includes('[Read Full Article]') ? (
+                        <a 
+                          href="https://subconsciousservant.com/divine-masculine/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm"
+                        >
+                          Read full article →
+                        </a>
+                      ) : (
+                        <Link
+                          href={`/archives/${article.id}`}
+                          className="text-blue-600 hover:underline text-sm"
+                        >
+                          Read more
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ))
@@ -240,15 +262,17 @@ export default function Archives() {
               <ul className="space-y-4">
                 <li>
                   <a
-                    href="#"
+                    href="https://subconsciousservant.com/divine-masculine/"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-start hover:bg-gray-50 p-2 rounded-md"
                   >
                     <div className="bg-blue-100 text-blue-600 font-bold w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                       1
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-800">Finding Support in Your Community</h4>
-                      <p className="text-sm text-gray-500">A guide to local resources</p>
+                      <h4 className="font-medium text-gray-800">Divine Masculine: 11 Key Qualities Explained</h4>
+                      <p className="text-sm text-gray-500">Understanding divine masculinity</p>
                     </div>
                   </a>
                 </li>
@@ -261,8 +285,8 @@ export default function Archives() {
                       2
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-800">Self-Care Strategies</h4>
-                      <p className="text-sm text-gray-500">Essential practices for well-being</p>
+                      <h4 className="font-medium text-gray-800">Finding Support in Your Community</h4>
+                      <p className="text-sm text-gray-500">A guide to local resources</p>
                     </div>
                   </a>
                 </li>
