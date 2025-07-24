@@ -39,10 +39,18 @@ export default function Locator() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
   
-  // Initialize auth
+  // Initialize auth and check authentication
   useEffect(() => {
     initialize()
   }, [initialize])
+  
+  // Redirect to login if not authenticated (client-side fallback)
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.log('User not authenticated, redirecting to login')
+      router.push('/api/auth/login?redirectUrl=/locator')
+    }
+  }, [user, authLoading, router])
   
   // Try to get user location for better initial experience
   useEffect(() => {
@@ -342,6 +350,27 @@ export default function Locator() {
   // State to track if an overlay/modal is open
   const overlayOpen = Boolean(selectedGroup) || showSearchResults || (!isLoading && groups.length === 0);
   
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#292929] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+
+  // Show loading if user is not authenticated (will redirect)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#292929] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white">Redirecting to login...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#292929] overflow-x-hidden">
 
