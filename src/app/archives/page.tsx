@@ -14,10 +14,15 @@ export default function Archives() {
   const [categories, setCategories] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchArticles()
   }, [selectedCategory])
+
+  const handleImageError = (articleId: string) => {
+    setImageErrors(prev => new Set(prev).add(articleId))
+  }
 
   const fetchArticles = async () => {
     setIsLoading(true)
@@ -106,16 +111,19 @@ export default function Archives() {
             {featuredArticle && (
               <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
                 <div className="relative h-64 w-full">
-                  {featuredArticle.thumbnail_url ? (
+                  {featuredArticle.thumbnail_url && !imageErrors.has(featuredArticle.id) ? (
                     <Image
                       src={featuredArticle.thumbnail_url}
                       alt={featuredArticle.title}
                       fill
                       className="object-cover"
+                      onError={() => handleImageError(featuredArticle.id)}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-gray-400 text-lg">No Image Available</span>
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white font-semibold text-xl">
+                        {featuredArticle.title === 'Divine Masculine: 11 Key Qualities Explained' ? 'Divine Masculine' : 'Featured Article'}
+                      </span>
                     </div>
                   )}
                   <div className="absolute top-0 left-0 bg-blue-600 text-white px-4 py-1">
@@ -152,22 +160,25 @@ export default function Archives() {
                 articles.map((article) => (
                   <div key={article.id} className="bg-white shadow-md rounded-lg overflow-hidden">
                     <div className="relative h-48 w-full">
-                      {article.thumbnail_url ? (
+                      {article.thumbnail_url && !imageErrors.has(article.id) ? (
                         <Image
                           src={article.thumbnail_url}
                           alt={article.title}
                           fill
                           className="object-cover"
+                          onError={() => handleImageError(article.id)}
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-gray-400">No Image</span>
+                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                          <span className="text-white font-semibold text-lg">
+                            {article.title === 'Divine Masculine: 11 Key Qualities Explained' ? 'Divine Masculine' : 'Article'}
+                          </span>
                         </div>
                       )}
                     </div>
                     <div className="p-4">
                       <h3 className="text-xl font-semibold mb-2">
-                        {article.content.includes('[Read Full Article]') ? (
+                        {article.title === 'Divine Masculine: 11 Key Qualities Explained' ? (
                           <a 
                             href="https://subconsciousservant.com/divine-masculine/" 
                             target="_blank" 
@@ -190,7 +201,7 @@ export default function Archives() {
                       <p className="text-gray-700 mb-3">
                         {truncateText(article.content, 150)}
                       </p>
-                      {article.content.includes('[Read Full Article]') ? (
+                      {article.title === 'Divine Masculine: 11 Key Qualities Explained' ? (
                         <a 
                           href="https://subconsciousservant.com/divine-masculine/" 
                           target="_blank" 
