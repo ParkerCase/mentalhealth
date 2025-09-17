@@ -227,15 +227,14 @@ export default function Home() {
         <div className="container relative mx-auto px-4 sm:px-6 z-10">
           <div className="max-w-3xl">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extralight tracking-tight mb-4 sm:mb-6">
-              <span className="block opacity-90">Arise Divine Masculine</span>
+              <span className="block opacity-90">Hello, my Beautiful Brothers!</span>
               <span className="block text-xs sm:text-sm uppercase tracking-[0.2em] mt-2 sm:mt-3 mb-4 sm:mb-8 font-light">
-                Find your community, wherever you are
+                Welcome to Arise Divine Masculine
               </span>
             </h1>
             
-            <p className="text-base sm:text-lg md:text-xl font-light text-gray-300 mb-8 sm:mb-12 max-w-lg opacity-80">
-              Connect with support groups and communities in your area.
-              Find your people, or offer support to others.
+            <p className="text-base sm:text-lg md:text-xl font-light text-gray-300 mb-8 sm:mb-12 max-w-2xl opacity-80">
+              We are a growing international community of men ready to face their shadows, fears and beliefs in search of a deeper connection to their soul, men who are ready to transmute their victim story, exhausted with living unconsciously and want to heed the call of living in their Power.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
@@ -268,36 +267,56 @@ export default function Home() {
       {/* How It Works Section */}
       <section className="py-12 sm:py-20 bg-[#404040]">
         <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-light text-center mb-8 sm:mb-16 tracking-wider">How It <span className="font-semibold">Works</span></h2>
+          <h2 className="text-2xl sm:text-3xl font-light text-center mb-8 sm:mb-16 tracking-wider">Our <span className="font-semibold">Goals</span></h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
             <div className="card backdrop-blur-md border border-white/5">
-              <div className="w-16 h-16 flex items-center justify-center border border-white/10 rounded-sm mb-6">
-                <span className="text-2xl font-light">01</span>
+              <div className="w-12 h-12 flex items-center justify-center border border-white/10 rounded-sm mb-4">
+                <span className="text-lg font-light">01</span>
               </div>
-              <h3 className="text-xl font-light mb-4 tracking-wide">Search</h3>
-              <p className="text-gray-400 font-light">
-                Use our locator tool to find support groups and communities in your area.
+              <h3 className="text-lg font-light mb-3 tracking-wide">Global Directory</h3>
+              <p className="text-gray-400 font-light text-sm">
+                Create a thorough directory of men's healing groups around the world.
               </p>
             </div>
             
             <div className="card backdrop-blur-md border border-white/5">
-              <div className="w-16 h-16 flex items-center justify-center border border-white/10 rounded-sm mb-6">
-                <span className="text-2xl font-light">02</span>
+              <div className="w-12 h-12 flex items-center justify-center border border-white/10 rounded-sm mb-4">
+                <span className="text-lg font-light">02</span>
               </div>
-              <h3 className="text-xl font-light mb-4 tracking-wide">Connect</h3>
-              <p className="text-gray-400 font-light">
-                Reach out to groups that match your needs through our secure messaging system.
+              <h3 className="text-lg font-light mb-3 tracking-wide">Easy Discovery</h3>
+              <p className="text-gray-400 font-light text-sm">
+                Help men find groups in their area that resonate with them, along with a local calendar of events.
               </p>
             </div>
             
             <div className="card backdrop-blur-md border border-white/5">
-              <div className="w-16 h-16 flex items-center justify-center border border-white/10 rounded-sm mb-6">
-                <span className="text-2xl font-light">03</span>
+              <div className="w-12 h-12 flex items-center justify-center border border-white/10 rounded-sm mb-4">
+                <span className="text-lg font-light">03</span>
               </div>
-              <h3 className="text-xl font-light mb-4 tracking-wide">The Journey</h3>
-              <p className="text-gray-400 font-light">
-                Attend meetings, participate in events, and become part of a supportive community.
+              <h3 className="text-lg font-light mb-3 tracking-wide">Group Growth</h3>
+              <p className="text-gray-400 font-light text-sm">
+                Facilitate growth for existing men's groups by spreading awareness of their existence.
+              </p>
+            </div>
+            
+            <div className="card backdrop-blur-md border border-white/5">
+              <div className="w-12 h-12 flex items-center justify-center border border-white/10 rounded-sm mb-4">
+                <span className="text-lg font-light">04</span>
+              </div>
+              <h3 className="text-lg font-light mb-3 tracking-wide">Leader Connection</h3>
+              <p className="text-gray-400 font-light text-sm">
+                Bring together Leaders, Founders and Organizers to share lessons learned and effective practices.
+              </p>
+            </div>
+            
+            <div className="card backdrop-blur-md border border-white/5">
+              <div className="w-12 h-12 flex items-center justify-center border border-white/10 rounded-sm mb-4">
+                <span className="text-lg font-light">05</span>
+              </div>
+              <h3 className="text-lg font-light mb-3 tracking-wide">Global Brotherhood</h3>
+              <p className="text-gray-400 font-light text-sm">
+                Foster a global community of Awake men who share cross-cultural, experiential and innate wisdom.
               </p>
             </div>
           </div>
@@ -311,14 +330,14 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div className="bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-sm">
-              <h3 className="text-2xl font-light mb-4">Find Your Community</h3>
+              <h3 className="text-2xl font-light mb-4">Find Your Brotherhood</h3>
               <p className="text-gray-300 mb-6">
-                Connecting with others who share similar experiences can provide invaluable support, validation, and practical guidance through life&apos;s many challenges.
+                Connect with men who are ready to face their shadows, transmute their victim story, and live in their Power. Join a community of brothers on the path of conscious awakening.
               </p>
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-start">
                   <div className="text-blue-400 mr-2 mt-1">•</div>
-                  <span>Connect with people who resonate with your journey</span>
+                  <span>Connect with men who resonate with your journey of transformation</span>
                 </li>
                 <li className="flex items-start">
                   <div className="text-blue-400 mr-2 mt-1">•</div>
@@ -326,18 +345,18 @@ export default function Home() {
                 </li>
                 <li className="flex items-start">
                   <div className="text-blue-400 mr-2 mt-1">•</div>
-                  <span>Discover local resources tailored to your needs</span>
+                  <span>Discover local men's groups and healing communities</span>
                 </li>
               </ul>
             </div>
             
             <div className="bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-sm">
-              <h3 className="text-2xl font-light mb-4">Lead a Group</h3>
+              <h3 className="text-2xl font-light mb-4">Lead Your Community</h3>
               <p className="text-gray-300 mb-6">
-                Have expertise or experience you want to share? Create a group and foster connection in your community.
+                Ready to step into leadership? Create a men's group and foster deep connection in your community. Share your wisdom and guide others on their journey.
               </p>
               <p className="text-gray-400 mb-6">
-                Our platform makes it easy to register and manage your group, connect with members, and grow your community.
+                Our platform makes it easy to register and manage your group, connect with members, and grow your community of conscious men.
               </p>
               <Link href="/groups/register" className="btn-primary inline-block">
                 Register a New Group
