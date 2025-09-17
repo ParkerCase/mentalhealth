@@ -4,6 +4,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
+import { hasAdminAccess } from '@/lib/utils/admin'
 import Link from 'next/link'
 import { 
   FaUsers, 
@@ -27,7 +28,7 @@ export default function AdminLayout({
   }, [initialize])
   
   useEffect(() => {
-    // Check if user is admin - add your own logic here
+    // Check if user is admin based on email domain
     const checkIsAdmin = async () => {
       if (loading) return
       
@@ -36,10 +37,8 @@ export default function AdminLayout({
         return
       }
       
-      // This is where you'd check if the user has admin privileges
-      // Example: check a custom claim, role in the database, etc.
-      // For now, we'll use a simple placeholder
-      const isAdmin = true // Replace with your admin check logic
+      // Check if user has admin access based on email domain
+      const isAdmin = hasAdminAccess(user.email)
       
       if (!isAdmin) {
         router.push('/')

@@ -7,7 +7,6 @@ const nextConfig = {
   images: {
     domains: [
       "ldpfadlrxmmgsttkjwop.supabase.co", // <-- your Supabase project ref
-
       "pbzjrfcoipldrkpytikw.supabase.co",
       "avatars.githubusercontent.com",
       "lh3.googleusercontent.com",
@@ -15,6 +14,7 @@ const nextConfig = {
       "platform-lookaside.fbsbx.com",
     ],
   },
+
   // Next.js 15+ no longer uses serverExternalPackages in experimental
   // Removed per update requirements
   webpack: (config, { isServer }) => {

@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import Link from 'next/link'
-import AuthUI from '@/components/auth/AuthUI'
+import ReCaptchaAuthForm from '@/components/auth/ReCaptchaAuthForm'
 
 function LoginPageInner() {
   const router = useRouter()
@@ -59,7 +59,7 @@ function LoginPageInner() {
           </div>
 
           <div className="mt-6 sm:mt-8">
-            <AuthUI 
+            <ReCaptchaAuthForm 
               view="sign_in" 
               redirectTo={redirectUrl}
             />

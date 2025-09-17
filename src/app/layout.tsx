@@ -51,7 +51,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#292929" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
       </head>
       <body className={inter.className}>
         <div className="flex flex-col min-h-screen">

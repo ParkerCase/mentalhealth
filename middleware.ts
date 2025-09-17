@@ -3,6 +3,14 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+/**
+ * Check if a user has admin access based on their email domain
+ */
+function hasAdminAccess(email: string | null | undefined): boolean {
+  if (!email) return false
+  return email.toLowerCase().endsWith('@arisedivinemasculine')
+}
+
 export async function middleware(req: NextRequest) {
   try {
     console.log('=== MIDDLEWARE RUNNING ===')
@@ -23,6 +31,7 @@ export async function middleware(req: NextRequest) {
     
     // Check if user is authenticated
     let isAuthenticated = false
+    let userEmail: string | null = null
     
     if (supabaseAuthCookie) {
       try {
@@ -42,7 +51,9 @@ export async function middleware(req: NextRequest) {
         })
         
         isAuthenticated = !!data.session
+        userEmail = data.session?.user?.email || null
         console.log('Authentication check result:', isAuthenticated)
+        console.log('User email:', userEmail)
       } catch (e) {
         console.error('Error parsing auth cookie:', e)
       }
@@ -66,7 +77,11 @@ export async function middleware(req: NextRequest) {
       path === protectedPath || path.startsWith(`${protectedPath}/`)
     )
     
+    // Check if this is an admin path
+    const isAdminPath = path === '/admin' || path.startsWith('/admin/')
+    
     console.log('Is protected path:', isProtectedPath)
+    console.log('Is admin path:', isAdminPath)
     console.log('Is authenticated:', isAuthenticated)
     
     // If this is a protected path and the user is not logged in, redirect to login
@@ -77,6 +92,17 @@ export async function middleware(req: NextRequest) {
       redirectUrl.searchParams.set('redirectUrl', path)
       
       return NextResponse.redirect(redirectUrl)
+    }
+    
+    // If this is an admin path, check if user has admin access
+    if (isAdminPath && isAuthenticated) {
+      const userHasAdminAccess = hasAdminAccess(userEmail)
+      console.log('Admin access check:', userHasAdminAccess, 'for email:', userEmail)
+      
+      if (!userHasAdminAccess) {
+        console.log('Redirecting non-admin user from admin path:', path)
+        return NextResponse.redirect(new URL('/', req.url))
+      }
     }
     
     return res
