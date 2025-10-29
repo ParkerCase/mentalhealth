@@ -86,81 +86,14 @@ export default function Header() {
             <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
                 <span className="sr-only">Arise Divine Masculine Home</span>
-                <svg 
-                  width={isMobile ? "120" : "160"} 
-                  height={isMobile ? "36" : "48"} 
-                  viewBox="0 0 320 96" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
+                <Image 
+                  src="/logo.PNG"
+                  alt="Arise Divine Masculine Logo"
+                  width={isMobile ? 120 : 160}
+                  height={isMobile ? 36 : 48}
                   className="transition-all duration-300"
-                >
-                  {/* Left Half - Globe */}
-                  <g clipPath="url(#leftHalf)">
-                    <ellipse cx="80" cy="48" rx="60" ry="40" stroke="#4874bf" strokeWidth="4" fill="none"/>
-                    <line x1="20" y1="48" x2="140" y2="48" stroke="#4874bf" strokeWidth="2"/>
-                    <line x1="30" y1="35" x2="130" y2="35" stroke="#4874bf" strokeWidth="1.2"/>
-                    <line x1="30" y1="61" x2="130" y2="61" stroke="#4874bf" strokeWidth="1.2"/>
-                    <ellipse cx="80" cy="48" rx="40" ry="40" stroke="#4874bf" strokeWidth="1.2" fill="none"/>
-                    <ellipse cx="80" cy="48" rx="20" ry="40" stroke="#4874bf" strokeWidth="1.2" fill="none"/>
-                  </g>
-                  
-                  {/* Right Half - Sun */}
-                  <g clipPath="url(#rightHalf)">
-                    {/* Sun center circle */}
-                    <circle cx="240" cy="48" r="25" stroke="#FFD700" strokeWidth="4" fill="none"/>
-                    
-                    {/* Sun rays */}
-                    <line x1="240" y1="8" x2="240" y2="18" stroke="#FF6600" strokeWidth="3"/>
-                    <line x1="240" y1="78" x2="240" y2="88" stroke="#FF6600" strokeWidth="3"/>
-                    <line x1="200" y1="48" x2="190" y2="48" stroke="#FF6600" strokeWidth="3"/>
-                    <line x1="280" y1="48" x2="290" y2="48" stroke="#FF6600" strokeWidth="3"/>
-                    
-                    {/* Diagonal rays */}
-                    <line x1="220" y1="28" x2="213" y2="21" stroke="#FF6600" strokeWidth="2"/>
-                    <line x1="260" y1="28" x2="267" y2="21" stroke="#FF6600" strokeWidth="2"/>
-                    <line x1="220" y1="68" x2="213" y2="75" stroke="#FF6600" strokeWidth="2"/>
-                    <line x1="260" y1="68" x2="267" y2="75" stroke="#FF6600" strokeWidth="2"/>
-                    
-                    {/* Additional medium rays */}
-                    <line x1="225" y1="18" x2="228" y2="12" stroke="#FF6600" strokeWidth="2"/>
-                    <line x1="255" y1="18" x2="252" y2="12" stroke="#FF6600" strokeWidth="2"/>
-                    <line x1="225" y1="78" x2="228" y2="84" stroke="#FF6600" strokeWidth="2"/>
-                    <line x1="255" y1="78" x2="252" y2="84" stroke="#FF6600" strokeWidth="2"/>
-                    
-                    {/* Short rays */}
-                    <line x1="205" y1="35" x2="200" y2="32" stroke="#FF6600" strokeWidth="1.5"/>
-                    <line x1="275" y1="35" x2="280" y2="32" stroke="#FF6600" strokeWidth="1.5"/>
-                    <line x1="205" y1="61" x2="200" y2="64" stroke="#FF6600" strokeWidth="1.5"/>
-                    <line x1="275" y1="61" x2="280" y2="64" stroke="#FF6600" strokeWidth="1.5"/>
-                  </g>
-                  
-                  {/* Center ADM text overlay */}
-                  <text 
-                    x="160" 
-                    y="70" 
-                    fontFamily="Arial Black, Arial, sans-serif" 
-                    fontSize={isMobile ? "36" : "48"} 
-                    fontStyle="italic" 
-                    fontWeight="bold" 
-                    fill="#ab3434" 
-                    stroke="#e6a5b7" 
-                    strokeWidth="2" 
-                    textAnchor="middle" 
-                    letterSpacing={isMobile ? "4" : "8"}
-                  >
-                    ADM
-                  </text>
-                  
-                  {/* Clipping paths */}
-                  <defs>
-                    <clipPath id="leftHalf">
-                      <rect x="0" y="0" width="160" height="96"/>
-                    </clipPath>
-                    <clipPath id="rightHalf">
-                      <rect x="160" y="0" width="160" height="96"/>
-                    </clipPath>
-                  </defs>
-                </svg>
+                  priority
+                />
               </Link>
             </div>
             
