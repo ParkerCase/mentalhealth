@@ -89,9 +89,9 @@ export default function Header() {
                 <Image 
                   src="/logo.PNG"
                   alt="Arise Divine Masculine Logo"
-                  width={isMobile ? 120 : 160}
-                  height={isMobile ? 36 : 48}
-                  className="transition-all duration-300"
+                  width={isMobile ? 60 : 80}
+                  height={isMobile ? 60 : 80}
+                  className="transition-all duration-300 rounded-full"
                   priority
                 />
               </Link>
