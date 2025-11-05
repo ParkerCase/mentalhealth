@@ -177,9 +177,9 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#404040] overflow-hidden">
       {/* Hero Section with full-height globe visualization */}
-      <section className="relative h-screen flex items-center overflow-visible">
+      <section className="relative h-screen flex items-center overflow-visible bg-[#404040]">
         {/* Background globe visualization - significantly brightened */}
-        <div className="absolute inset-0 w-full h-full z-0 overflow-visible pointer-events-none bg-[#2a2a2a]">
+        <div className="absolute inset-0 w-full h-full z-0 overflow-visible pointer-events-none bg-[#404040]">
           <ErrorBoundary>
             <Suspense fallback={
               <div className="h-screen w-full flex items-center justify-center">
@@ -192,6 +192,7 @@ export default function Home() {
                 groups={exampleGroups}
                 interactive={false}
                 showSearch={false}
+                showTime={false}
                 width={heroSize.width}
                 height={heroSize.height}
                 style={{ transform: 'scale(1.2) translateY(-5%)' }}
@@ -260,8 +261,6 @@ export default function Home() {
           <div className="w-0.5 h-8 bg-gradient-to-b from-white to-transparent opacity-30"></div>
         </div>
         
-        {/* Gradient transition to the next section */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#404040] to-transparent z-10"></div>
       </section>
       
       {/* How It Works Section */}
