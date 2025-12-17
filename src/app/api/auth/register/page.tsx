@@ -6,8 +6,9 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import Link from 'next/link'
 import ReCaptchaAuthForm from '@/components/auth/ReCaptchaAuthForm'
 
-// Prevent static generation
+// Prevent static generation - must be exported from page component
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function RegisterPageInner() {
   const router = useRouter()
@@ -86,6 +87,11 @@ function RegisterPageInner() {
 }
 
 export default function RegisterPage() {
+  // Ensure this is never statically generated
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <RegisterPageInner />

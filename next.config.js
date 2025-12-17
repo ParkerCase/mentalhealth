@@ -3,6 +3,9 @@ const path = require("path");
 
 const nextConfig = {
   reactStrictMode: true,
+  
+  // Exclude auth pages from static generation
+  output: 'standalone',
 
   images: {
     domains: [
