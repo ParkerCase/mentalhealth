@@ -33,10 +33,9 @@ const nextConfig = {
     ],
   },
 
-  // Disable Turbopack to use webpack (required for Cesium)
-  experimental: {
-    turbo: false,
-  },
+  // Use webpack for Cesium configuration
+  // Add empty turbopack config to silence Next.js 16 warning
+  turbopack: {},
 
   // Next.js 15+ no longer uses serverExternalPackages in experimental
   // Removed per update requirements
