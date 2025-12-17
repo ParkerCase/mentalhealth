@@ -9,6 +9,10 @@ import Image from 'next/image'
 import { format } from 'date-fns'
 import { Article } from '@/lib/types'
 
+// Prevent static generation
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function ArticlePage() {
   const params = useParams()
   const [article, setArticle] = useState<Article | null>(null)
