@@ -51,8 +51,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#292929" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="icon" href="/logo.PNG" type="image/png" />
+        <link rel="icon" href="/logo.PNG" type="image/png" sizes="any" />
         <link rel="apple-touch-icon" href="/logo.PNG" />
+        <link rel="shortcut icon" href="/logo.PNG" />
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
       </head>
       <body className={inter.className}>
