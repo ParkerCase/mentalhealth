@@ -8,9 +8,6 @@ import Image from 'next/image'
 import { format } from 'date-fns'
 import { Article } from '@/lib/types'
 
-// Prevent static generation
-export const dynamic = 'force-dynamic'
-
 export default function Archives() {
   const [articles, setArticles] = useState<Article[]>([])
   const [featuredArticle, setFeaturedArticle] = useState<Article | null>(null)
