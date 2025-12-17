@@ -22,6 +22,21 @@ export default function RootLayout({
   const isHomePage = pathname === '/'
   const isLocatorPage = pathname === '/locator'
   
+  // Set favicon dynamically
+  useEffect(() => {
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
+    if (!link) {
+      const newLink = document.createElement('link')
+      newLink.rel = 'icon'
+      newLink.href = '/logo.PNG'
+      newLink.type = 'image/png'
+      document.getElementsByTagName('head')[0].appendChild(newLink)
+    } else {
+      link.href = '/logo.PNG'
+      link.type = 'image/png'
+    }
+  }, [])
+
   // Add appropriate class to body element
   useEffect(() => {
     document.body.classList.remove('home-page', 'locator-page')
