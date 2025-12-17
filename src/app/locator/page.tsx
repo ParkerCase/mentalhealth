@@ -309,6 +309,7 @@ export default function Locator() {
     setShowSearchResults(false);
     
     try {
+      // First, geocode the search location
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchValue)}&limit=1`);
       const data = await res.json();
       if (data && data.length > 0) {
@@ -322,25 +323,60 @@ export default function Locator() {
         }
         setAutoRotate(false);
         
-        // Find groups within 50 miles of the searched location
-        const nearbyGroups = groups.filter(group => {
-          const distance = calculateDistance(searchLat, searchLng, group.lat, group.lng);
-          return distance <= 50; // 50 mile radius
-        }).map(group => ({
-          ...group,
-          distance: calculateDistance(searchLat, searchLng, group.lat, group.lng)
-        })).sort((a, b) => a.distance - b.distance);
+        // Query database for groups within 50 miles using RPC function
+        const { data: nearbyGroupsData, error: groupsError } = await supabase
+          .rpc('get_groups_nearby', {
+            search_lat: searchLat,
+            search_lng: searchLng,
+            radius_miles: 50
+          });
         
-        setSearchResults(nearbyGroups);
-        setShowSearchResults(true);
-        
-        if (nearbyGroups.length === 0) {
-          setSearchError('No groups found within 50 miles of this location.');
+        if (groupsError) {
+          console.error('Error fetching nearby groups:', groupsError);
+          // Fallback to client-side filtering if RPC fails
+          const nearbyGroups = groups.filter(group => {
+            if (group.lat === 0 && group.lng === 0) return false; // Skip groups without coordinates
+            const distance = calculateDistance(searchLat, searchLng, group.lat, group.lng);
+            return distance <= 50;
+          }).map(group => ({
+            ...group,
+            distance: calculateDistance(searchLat, searchLng, group.lat, group.lng)
+          })).sort((a, b) => a.distance - b.distance);
+          
+          setSearchResults(nearbyGroups);
+          setShowSearchResults(true);
+          
+          if (nearbyGroups.length === 0) {
+            setSearchError('No groups found within 50 miles of this location.');
+          }
+        } else {
+          // Format the RPC results
+          const nearbyGroups = (nearbyGroupsData || []).map((group: any) => ({
+            id: group.id,
+            name: group.name,
+            lat: group.lat || 0,
+            lng: group.lng || 0,
+            city: group.city,
+            state: group.state,
+            description: group.description,
+            email: group.email,
+            phone: group.phone,
+            website: group.website,
+            distance: group.distance_miles || 0
+          }));
+          
+          setSearchResults(nearbyGroups);
+          setShowSearchResults(true);
+          
+          if (nearbyGroups.length === 0) {
+            setSearchError('No groups found within 50 miles of this location.');
+          }
         }
       } else {
         setSearchError('Location not found.');
       }
     } catch (err) {
+      console.error('Search error:', err);
       setSearchError('Error searching location.');
     } finally {
       setSearchLoading(false);

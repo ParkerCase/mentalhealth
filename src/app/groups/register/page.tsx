@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 import { GroupFormData, Group } from '@/lib/types'
+import { geocodeAddress } from '@/lib/utils/geocodingService'
 
 interface ExtendedGroupFormData extends GroupFormData {
   leaderFirstName: string;
@@ -22,6 +23,7 @@ export default function RegisterGroup() {
   const [formData, setFormData] = useState<ExtendedGroupFormData>({
     name: '',
     description: '',
+    location: '',
     address: '',
     city: '',
     state: '',
@@ -62,25 +64,61 @@ export default function RegisterGroup() {
     }
 
     try {
-      // Create the group
+      // Create the group first without geo_location to avoid PostGIS parsing issues
+      // We'll update the location separately if geocoding succeeds
       const { data: group, error: groupError } = await supabase
         .from('groups')
         .insert({
           name: formData.name,
           description: formData.description,
-          address: formData.address,
+          location: formData.location || null,
+          address: formData.address || null,
           city: formData.city,
           state: formData.state,
           zip: formData.zip,
-          website: formData.website,
+          website: formData.website || null,
           email: formData.email,
-          phone: formData.phone,
+          phone: formData.phone || null,
           approved: false // Requires admin approval
         })
         .select()
         .single() as { data: Group | null; error: Error | null }
 
-      if (groupError) throw groupError
+      if (groupError) {
+        console.error('Group creation error:', groupError)
+        throw new Error(groupError.message || 'Failed to create group. Please check your input and try again.')
+      }
+
+      // Try to geocode and update location if address is provided
+      if (group && formData.address && formData.city && formData.state) {
+        try {
+          const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zip}`
+          const results = await geocodeAddress(fullAddress)
+          
+          if (results && results.length > 0) {
+            const { lng, lat } = results[0]
+            // Try to update with geo_location using GeoJSON format
+            // If this fails, the group is still created, just without coordinates
+            try {
+              await supabase
+                .from('groups')
+                .update({
+                  geo_location: {
+                    type: 'Point',
+                    coordinates: [lng, lat]
+                  }
+                })
+                .eq('id', group.id)
+            } catch (geoUpdateError) {
+              console.warn('Could not update geo_location, but group was created:', geoUpdateError)
+              // Group is still created successfully, just without coordinates
+            }
+          }
+        } catch (geoError) {
+          console.warn('Geocoding error (group still created):', geoError)
+          // Continue - group is created, just without geocoding
+        }
+      }
 
       // If the user is logged in, add them as a leader
       if (user && group) {
@@ -104,6 +142,7 @@ export default function RegisterGroup() {
       setFormData({
         name: '',
         description: '',
+        location: '',
         address: '',
         city: '',
         state: '',
@@ -117,9 +156,9 @@ export default function RegisterGroup() {
         leaderPhone: '',
         agreeToTerms: false
       } as ExtendedGroupFormData)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error registering group:', error)
-      setError('There was an error submitting your group. Please try again.')
+      setError(error.message || 'There was an error submitting your group. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -234,8 +273,24 @@ export default function RegisterGroup() {
             </div>
             
             <div>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                General Location
+              </label>
+              <input
+              style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}
+                type="text"
+                id="location"
+                name="location"
+                value={formData.location || ''}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="e.g. Downtown Chicago, South Phoenix, etc."
+              />
+            </div>
+            
+            <div>
               <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                Address
+                Street Address
               </label>
               <input
               style={{backgroundColor: "#fff ", color: "#4b5563", borderColor: "#000", borderWidth: "1px"}}

@@ -48,34 +48,14 @@ export default function GroupForm({ onSuccess }: GroupFormProps) {
         throw new Error('You must be logged in to register a group')
       }
 
-      // Try to geocode the address
-      let geoLocation = null
-      if (formData.address && formData.city && formData.state) {
-        try {
-          const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zip}`
-          const results = await geocodeAddress(fullAddress)
-          
-          if (results && results.length > 0) {
-            const { lng, lat } = results[0]
-            geoLocation = {
-              type: 'Point',
-              coordinates: [lng, lat]
-            }
-          }
-        } catch (geoError) {
-          console.error('Geocoding error:', geoError)
-          // Continue without geocoding
-        }
-      }
-
-      // Insert the group
+      // Insert the group first without geo_location to avoid PostGIS parsing issues
+      // We'll update the location separately if geocoding succeeds
       const { data, error: insertError } = await supabase
         .from('groups')
         .insert({
           name: formData.name,
           description: formData.description,
           location: formData.location,
-          geo_location: geoLocation,
           address: formData.address,
           city: formData.city,
           state: formData.state,
@@ -88,6 +68,37 @@ export default function GroupForm({ onSuccess }: GroupFormProps) {
         .select()
       
       if (insertError) throw insertError
+
+      // Try to geocode and update location if address is provided
+      if (data && data.length > 0 && formData.address && formData.city && formData.state) {
+        try {
+          const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zip}`
+          const results = await geocodeAddress(fullAddress)
+          
+          if (results && results.length > 0) {
+            const { lng, lat } = results[0]
+            // Try to update with geo_location using GeoJSON format
+            // If this fails, the group is still created, just without coordinates
+            try {
+              await supabase
+                .from('groups')
+                .update({
+                  geo_location: {
+                    type: 'Point',
+                    coordinates: [lng, lat]
+                  }
+                })
+                .eq('id', data[0].id)
+            } catch (geoUpdateError) {
+              console.warn('Could not update geo_location, but group was created:', geoUpdateError)
+              // Group is still created successfully, just without coordinates
+            }
+          }
+        } catch (geoError) {
+          console.warn('Geocoding error (group still created):', geoError)
+          // Continue - group is created, just without geocoding
+        }
+      }
 
       setSuccess(true)
       

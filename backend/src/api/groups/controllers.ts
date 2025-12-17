@@ -27,6 +27,7 @@ export const searchGroups = async (req: Request, res: Response, next: NextFuncti
     }
     
     if (keywords) {
+      // Use or() with proper filter syntax for Supabase
       query = query.or(`name.ilike.%${keywords}%,description.ilike.%${keywords}%`);
     }
     
