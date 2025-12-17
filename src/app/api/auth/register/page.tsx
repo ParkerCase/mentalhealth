@@ -87,11 +87,6 @@ function RegisterPageInner() {
 }
 
 export default function RegisterPage() {
-  // Ensure this is never statically generated
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <RegisterPageInner />

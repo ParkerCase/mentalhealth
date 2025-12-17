@@ -96,11 +96,6 @@ function LoginPageInner() {
 }
 
 export default function LoginPage() {
-  // Ensure this is never statically generated
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <LoginPageInner />
