@@ -14,11 +14,11 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals"),
   {
     rules: {
-      // Disable rules that might conflict with TypeScript
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
       // Allow console in development
       "no-console": process.env.NODE_ENV === "production" ? "error" : "warn",
+      // Disable TypeScript-specific rules if plugin not available
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 ];

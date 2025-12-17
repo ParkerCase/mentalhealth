@@ -6,6 +6,9 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import Link from 'next/link'
 import ReCaptchaAuthForm from '@/components/auth/ReCaptchaAuthForm'
 
+// Prevent static generation
+export const dynamic = 'force-dynamic'
+
 function RegisterPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
