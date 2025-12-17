@@ -301,6 +301,13 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
     }
   }, [showMarkers, interactive, onGroupSelect, groupMarkers]);
 
+  // Handle zoom callback
+  const handleZoom = useCallback(({ lng, lat }: any) => {
+    if (globeMaterial?.uniforms?.globeRotation) {
+      globeMaterial.uniforms.globeRotation.value.set(lng, lat);
+    }
+  }, [globeMaterial]);
+
   // Optimized search with debouncing
   const handleSearch = useCallback(async (e: FormEvent) => {
     e.preventDefault();
@@ -397,11 +404,7 @@ const RealisticDayNightGlobe = forwardRef<any, RealisticDayNightGlobeProps>(({
             onPointClick: handleMarkerClick
           })}
           onGlobeReady={handleGlobeReady}
-          onZoom={useCallback(({ lng, lat }: any) => {
-            if (globeMaterial?.uniforms?.globeRotation) {
-              globeMaterial.uniforms.globeRotation.value.set(lng, lat);
-            }
-          }, [globeMaterial])}
+          onZoom={handleZoom}
           enablePointerInteraction={interactive}
         />
       </div>
