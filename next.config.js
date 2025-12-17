@@ -5,14 +5,37 @@ const nextConfig = {
   reactStrictMode: true,
 
   images: {
-    domains: [
-      "ldpfadlrxmmgsttkjwop.supabase.co", // <-- your Supabase project ref
-      "pbzjrfcoipldrkpytikw.supabase.co",
-      "avatars.githubusercontent.com",
-      "lh3.googleusercontent.com",
-      "graph.facebook.com",
-      "platform-lookaside.fbsbx.com",
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ldpfadlrxmmgsttkjwop.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pbzjrfcoipldrkpytikw.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'graph.facebook.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'platform-lookaside.fbsbx.com',
+      },
     ],
+  },
+
+  // Disable Turbopack to use webpack (required for Cesium)
+  experimental: {
+    turbo: false,
   },
 
   // Next.js 15+ no longer uses serverExternalPackages in experimental
@@ -52,10 +75,6 @@ const nextConfig = {
     return config;
   },
 
-  // Ensure Cesium assets are available
-  publicRuntimeConfig: {
-    cesiumBaseUrl: "/cesium/",
-  },
 };
 
 module.exports = nextConfig;
