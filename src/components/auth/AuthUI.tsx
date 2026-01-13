@@ -33,11 +33,6 @@ export default function AuthUI({
 
   return (
     <div className="w-full max-w-md">
-      {/* Debug: Check if Turnstile is loaded */}
-      <div id="turnstile-debug" className="mb-4 p-2 bg-gray-100 text-xs">
-        Turnstile Debug: {typeof window !== 'undefined' && (window as any).turnstile ? 'Loaded' : 'Not Loaded'}
-      </div>
-      
       <Auth
         supabaseClient={supabase}
         appearance={{

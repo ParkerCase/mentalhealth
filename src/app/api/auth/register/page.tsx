@@ -4,7 +4,7 @@ import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import Link from 'next/link'
-import ReCaptchaAuthForm from '@/components/auth/ReCaptchaAuthForm'
+import AuthUI from '@/components/auth/AuthUI'
 
 function RegisterPageInner() {
   const router = useRouter()
@@ -54,7 +54,7 @@ function RegisterPageInner() {
           </div>
 
           <div className="mt-8">
-            <ReCaptchaAuthForm 
+            <AuthUI 
               view="sign_up" 
               redirectTo="/profile"
             />
