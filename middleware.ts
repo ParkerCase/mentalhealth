@@ -96,7 +96,14 @@ export async function middleware(req: NextRequest) {
     
     // If this is a protected path and the user is not logged in, redirect to login
     // BUT: Don't redirect if we're already on the login/register page (prevents loops)
+    // AND: Don't redirect /admin paths if user might be authenticated (let client-side handle it)
     if (isProtectedPath && !isAuthenticated && !path.startsWith('/api/auth/')) {
+      // For /admin paths, let client-side handle auth to avoid redirect loops
+      if (path.startsWith('/admin')) {
+        // Allow through - admin layout will handle redirect client-side
+        return res
+      }
+      
       console.log('Redirecting unauthenticated user from:', path, 'to login page')
       // Create the redirect URL with the current path as the redirectUrl query parameter
       const redirectUrl = new URL('/api/auth/login', req.url)

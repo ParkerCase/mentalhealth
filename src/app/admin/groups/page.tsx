@@ -155,7 +155,11 @@ export default function AdminGroups() {
         .update({ approved: false })
         .eq('id', groupId)
       
-      if (error) throw error
+      if (error) {
+        console.error('Error unapproving group:', error)
+        alert(`Error unapproving group: ${error.message}`)
+        return
+      }
       
       // Update local state
       setGroups(prevGroups => 
@@ -164,9 +168,9 @@ export default function AdminGroups() {
         )
       )
       alert('Group unapproved successfully')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error unapproving group:', error)
-      alert('Error unapproving group. Please try again.')
+      alert(`Error unapproving group: ${error.message || 'Unknown error'}`)
     }
   }
   
@@ -181,7 +185,7 @@ export default function AdminGroups() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Manage Groups</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Manage Groups</h1>
         <button
           onClick={() => router.push('/admin/groups/create')}
           className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"

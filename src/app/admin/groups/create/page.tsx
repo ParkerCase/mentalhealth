@@ -114,7 +114,7 @@ export default function CreateGroup() {
           <FaArrowLeft className="mr-2" />
           Back to Groups
         </Link>
-        <h1 className="text-3xl font-bold">Create New Group</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Create New Group</h1>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
