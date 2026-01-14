@@ -396,17 +396,19 @@ export default function Locator() {
   }
 
   // Show loading if user is not authenticated (will redirect)
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#292929] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">Redirecting to login...</p>
-        </div>
-      </div>
-    )
-  }
+  // TEMPORARILY COMMENTED OUT TO DEBUG - REMOVE THIS CHECK
+  // if (!user) {
+  //   return (
+  //     <div className="min-h-screen bg-[#292929] flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+  //         <p className="text-white">Redirecting to login...</p>
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
+  // User is authenticated - render the page
   return (
     <div className="min-h-screen bg-[#292929] overflow-x-hidden">
 
