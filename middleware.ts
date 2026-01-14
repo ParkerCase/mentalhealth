@@ -1,5 +1,5 @@
 // middleware.ts
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -26,51 +26,21 @@ export async function middleware(req: NextRequest) {
     
     const res = NextResponse.next()
     
-    // Check if user is authenticated
-    // Supabase stores auth in multiple ways - check all possible cookies
+    // Check if user is authenticated using Supabase server client
     let isAuthenticated = false
     let userEmail: string | null = null
     
-    // Check for our custom auth cookie
-    const supabaseAuthCookie = req.cookies.get('supabase-auth-token')?.value
-    // Also check for Supabase's default cookies
-    const sbAccessToken = req.cookies.get('sb-access-token')?.value
-    const sbRefreshToken = req.cookies.get('sb-refresh-token')?.value
-    
-    if (supabaseAuthCookie || sbAccessToken) {
-      try {
-        let access_token, refresh_token
-        
-        if (supabaseAuthCookie) {
-          // Our custom cookie format
-          [access_token, refresh_token] = JSON.parse(supabaseAuthCookie)
-        } else if (sbAccessToken && sbRefreshToken) {
-          // Supabase default cookies
-          access_token = sbAccessToken
-          refresh_token = sbRefreshToken
-        }
-        
-        if (access_token) {
-          // Create supabase client
-          const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-          )
-          
-          // Set the session manually
-          const { data, error } = await supabase.auth.setSession({
-            access_token,
-            refresh_token
-          })
-          
-          isAuthenticated = !!data.session
-          userEmail = data.session?.user?.email || null
-          console.log('Authentication check result:', isAuthenticated)
-          console.log('User email:', userEmail)
-        }
-      } catch (e) {
-        console.error('Error parsing auth cookie:', e)
-      }
+    try {
+      // Use Supabase server client which properly reads cookies
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      isAuthenticated = !!user
+      userEmail = user?.email || null
+      console.log('Authentication check result:', isAuthenticated)
+      console.log('User email:', userEmail)
+    } catch (e) {
+      console.error('Error checking auth in middleware:', e)
     }
     
     // Define protected routes that require authentication
