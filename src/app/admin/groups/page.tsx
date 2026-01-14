@@ -3,11 +3,13 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FaCheck, FaTimes, FaSearch, FaFilter } from 'react-icons/fa'
+import { FaCheck, FaTimes, FaSearch, FaFilter, FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
 import { Group } from '@/lib/types'
 
 export default function AdminGroups() {
+  const router = useRouter()
   const [groups, setGroups] = useState<Group[]>([])
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
@@ -83,7 +85,7 @@ export default function AdminGroups() {
   }
   
   const handleReject = async (groupId: string) => {
-    if (!confirm('Are you sure you want to reject this group?')) return
+    if (!confirm('Are you sure you want to reject/delete this group?')) return
     
     try {
       const { error } = await supabase
@@ -95,8 +97,52 @@ export default function AdminGroups() {
       
       // Update local state
       setGroups(prevGroups => prevGroups.filter(group => group.id !== groupId))
+      alert('Group deleted successfully')
     } catch (error) {
-      console.error('Error rejecting group:', error)
+      console.error('Error deleting group:', error)
+      alert('Error deleting group. Please try again.')
+    }
+  }
+
+  const handleDelete = async (groupId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this group? This action cannot be undone.')) return
+    
+    try {
+      const { error } = await supabase
+        .from('groups')
+        .delete()
+        .eq('id', groupId)
+      
+      if (error) throw error
+      
+      // Update local state
+      setGroups(prevGroups => prevGroups.filter(group => group.id !== groupId))
+      alert('Group deleted successfully')
+    } catch (error) {
+      console.error('Error deleting group:', error)
+      alert('Error deleting group. Please try again.')
+    }
+  }
+
+  const handleUnapprove = async (groupId: string) => {
+    try {
+      const { error } = await supabase
+        .from('groups')
+        .update({ approved: false })
+        .eq('id', groupId)
+      
+      if (error) throw error
+      
+      // Update local state
+      setGroups(prevGroups => 
+        prevGroups.map(group => 
+          group.id === groupId ? { ...group, approved: false } : group
+        )
+      )
+      alert('Group unapproved successfully')
+    } catch (error) {
+      console.error('Error unapproving group:', error)
+      alert('Error unapproving group. Please try again.')
     }
   }
   
@@ -110,7 +156,16 @@ export default function AdminGroups() {
   
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Manage Groups</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Manage Groups</h1>
+        <button
+          onClick={() => router.push('/admin/groups/create')}
+          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          <FaPlus />
+          <span>Create New Group</span>
+        </button>
+      </div>
       
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -195,27 +250,44 @@ export default function AdminGroups() {
                         <Link 
                           href={`/admin/groups/${group.id}`}
                           className="text-blue-600 hover:text-blue-900"
+                          title="View Details"
                         >
                           View
                         </Link>
                         
-                        {!group.approved && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(group.id)}
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              <FaCheck title="Approve" />
-                            </button>
-                            
-                            <button
-                              onClick={() => handleReject(group.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              <FaTimes title="Reject" />
-                            </button>
-                          </>
+                        <Link
+                          href={`/admin/groups/${group.id}/edit`}
+                          className="text-yellow-600 hover:text-yellow-900"
+                          title="Edit Group"
+                        >
+                          <FaEdit />
+                        </Link>
+                        
+                        {group.approved ? (
+                          <button
+                            onClick={() => handleUnapprove(group.id)}
+                            className="text-orange-600 hover:text-orange-900"
+                            title="Unapprove Group"
+                          >
+                            <FaTimes />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleApprove(group.id)}
+                            className="text-green-600 hover:text-green-900"
+                            title="Approve Group"
+                          >
+                            <FaCheck />
+                          </button>
                         )}
+                        
+                        <button
+                          onClick={() => handleDelete(group.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete Group"
+                        >
+                          <FaTrash />
+                        </button>
                       </div>
                     </td>
                   </tr>

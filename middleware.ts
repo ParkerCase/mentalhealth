@@ -8,7 +8,8 @@ import type { NextRequest } from 'next/server'
  */
 function hasAdminAccess(email: string | null | undefined): boolean {
   if (!email) return false
-  return email.toLowerCase().endsWith('@arisedivinemasculine')
+  const allowedEmails = ['jongfisher70@gmail.com', 'parkere.case@gmail.com']
+  return allowedEmails.map(e => e.toLowerCase()).includes(email.toLowerCase())
 }
 
 export async function middleware(req: NextRequest) {

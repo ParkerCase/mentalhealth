@@ -3,9 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
+import { hasAdminAccess } from '@/lib/utils/admin'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { FaEnvelope, FaBars, FaTimes, FaUser, FaHeart } from 'react-icons/fa'
+import { FaEnvelope, FaBars, FaTimes, FaUser, FaHeart, FaUsersCog } from 'react-icons/fa'
 
 export default function Header() {
   const pathname = usePathname()
@@ -114,6 +115,15 @@ export default function Header() {
             <div className="flex items-center space-x-3">
               {!loading && user ? (
                 <div className="hidden md:flex items-center space-x-3">
+                  {hasAdminAccess(user.email) && (
+                    <Link 
+                      href="/admin/groups" 
+                      className="nav-link hidden lg:block"
+                      title="Manage Groups"
+                    >
+                      <FaUsersCog className="text-lg" />
+                    </Link>
+                  )}
                   <Link href="/messages" className="nav-link hidden lg:block">
                     <FaEnvelope className="text-lg" />
                   </Link>
@@ -255,6 +265,20 @@ export default function Header() {
                   })}
                 </nav>
               </div>
+              
+              {/* Admin Section (Mobile) */}
+              {user && hasAdminAccess(user.email) && (
+                <div className="px-6 py-3 border-t border-white/10">
+                  <Link
+                    href="/admin/groups"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center space-x-3 py-3 text-blue-400 hover:text-blue-300 transition-colors touch-manipulation"
+                  >
+                    <FaUsersCog className="text-lg" />
+                    <span>Manage Groups</span>
+                  </Link>
+                </div>
+              )}
               
               {/* Login/Logout Section */}
               <div className="p-6 border-t border-white/10">

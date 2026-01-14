@@ -1,15 +1,23 @@
 // src/lib/utils/admin.ts
 
 /**
- * Check if a user has admin access based on their email domain
+ * List of allowed admin email addresses
+ */
+const ALLOWED_ADMIN_EMAILS = [
+  'jongfisher70@gmail.com',
+  'parkere.case@gmail.com'
+].map(email => email.toLowerCase())
+
+/**
+ * Check if a user has admin access based on their email address
  * @param email - The user's email address
  * @returns boolean - true if the user has admin access
  */
 export function isAdminUser(email: string | null | undefined): boolean {
   if (!email) return false
   
-  // Check if email ends with @arisedivinemasculine
-  return email.toLowerCase().endsWith('@arisedivinemasculine')
+  // Check if email is in the allowed admin emails list
+  return ALLOWED_ADMIN_EMAILS.includes(email.toLowerCase())
 }
 
 /**
@@ -36,18 +44,18 @@ export function isEmailDomainAllowed(email: string | null | undefined, allowedDo
 }
 
 /**
- * Get the list of allowed admin domains
- * @returns string[] - Array of allowed admin domains
+ * Get the list of allowed admin email addresses
+ * @returns string[] - Array of allowed admin emails
  */
-export function getAllowedAdminDomains(): string[] {
-  return ['arisedivinemasculine']
+export function getAllowedAdminEmails(): string[] {
+  return [...ALLOWED_ADMIN_EMAILS]
 }
 
 /**
- * Check if a user has admin access using the default allowed domains
+ * Check if a user has admin access
  * @param email - The user's email address
  * @returns boolean - true if the user has admin access
  */
 export function hasAdminAccess(email: string | null | undefined): boolean {
-  return isEmailDomainAllowed(email, getAllowedAdminDomains())
+  return isAdminUser(email)
 }
