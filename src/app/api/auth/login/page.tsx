@@ -24,8 +24,9 @@ function LoginPageInner() {
 
   useEffect(() => {
     if (!loading && user) {
-      // Use replace instead of push to avoid back button issues
-      router.replace(redirectUrl)
+      // Redirect immediately if user is already logged in
+      const targetUrl = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`
+      router.replace(targetUrl)
     }
   }, [user, loading, router, redirectUrl])
 
@@ -38,7 +39,12 @@ function LoginPageInner() {
   }
 
   if (user) {
-    // Show redirect message briefly, but useEffect should handle redirect
+    // Redirect immediately - don't show loading screen
+    // The useEffect above should handle this, but as a fallback:
+    if (typeof window !== 'undefined') {
+      const targetUrl = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`
+      window.location.href = targetUrl
+    }
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
