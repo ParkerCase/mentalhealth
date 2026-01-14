@@ -80,37 +80,7 @@ export default function AdminLayout({
               <span>Groups</span>
             </Link>
             
-            <Link
-              href="/admin/users"
-              className="flex items-center space-x-2 p-2 rounded-md hover:bg-blue-800"
-            >
-              <FaUserShield />
-              <span>Users</span>
-            </Link>
-            
-            <Link
-              href="/admin/content"
-              className="flex items-center space-x-2 p-2 rounded-md hover:bg-blue-800"
-            >
-              <FaClipboardList />
-              <span>Content</span>
-            </Link>
-            
-            <Link
-              href="/admin/messages"
-              className="flex items-center space-x-2 p-2 rounded-md hover:bg-blue-800"
-            >
-              <FaComment />
-              <span>Messages</span>
-            </Link>
-            
-            <Link
-              href="/admin/settings"
-              className="flex items-center space-x-2 p-2 rounded-md hover:bg-blue-800"
-            >
-              <FaCog />
-              <span>Settings</span>
-            </Link>
+            {/* Removed non-functional tabs: Users, Content, Messages, Settings */}
           </nav>
           
           <div className="absolute bottom-4 left-4">

@@ -37,6 +37,24 @@ export default function AdminGroups() {
     }
     
     fetchGroups()
+    
+    // Set up real-time subscription for new groups
+    const groupsChannel = supabase
+      .channel('admin-groups-changes')
+      .on('postgres_changes', {
+        event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'groups'
+      }, (payload) => {
+        console.log('Groups table changed:', payload)
+        // Refetch groups when any change occurs
+        fetchGroups()
+      })
+      .subscribe()
+    
+    return () => {
+      supabase.removeChannel(groupsChannel)
+    }
   }, [])
   
   useEffect(() => {

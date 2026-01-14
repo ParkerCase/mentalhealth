@@ -124,11 +124,11 @@ export async function middleware(req: NextRequest) {
 }
 
 // Only run middleware on specific paths
-// NOTE: /locator and /groups/register are NOT in matcher - handled client-side only
+// NOTE: /locator, /groups/register, and /messages are NOT in matcher - handled client-side only
 export const config = {
   matcher: [
     '/profile',
-    '/messages',
+    // '/messages', // Removed - handled client-side
     '/dashboard',
     '/admin',
     // '/locator', // Removed - handled client-side
