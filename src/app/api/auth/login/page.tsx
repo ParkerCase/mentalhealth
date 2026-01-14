@@ -26,6 +26,7 @@ function LoginPageInner() {
     if (!loading && user) {
       // Redirect immediately if user is already logged in
       const targetUrl = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`
+      // Use router.replace to avoid adding to history
       router.replace(targetUrl)
     }
   }, [user, loading, router, redirectUrl])
@@ -39,20 +40,8 @@ function LoginPageInner() {
   }
 
   if (user) {
-    // Redirect immediately - don't show loading screen
-    // The useEffect above should handle this, but as a fallback:
-    if (typeof window !== 'undefined') {
-      const targetUrl = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`
-      window.location.href = targetUrl
-    }
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p>You are already logged in. Redirecting...</p>
-        </div>
-      </div>
-    )
+    // Don't render anything while redirecting - useEffect handles it
+    return null
   }
 
   return (
