@@ -35,11 +35,16 @@ export default function AuthUI({
   // Listen for auth errors through auth state changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session ? 'has session' : 'no session')
+      
       if (event === 'SIGNED_IN' && session) {
         setAuthError(null)
       } else if (event === 'SIGNED_OUT') {
         setAuthError(null)
       } else if (event === 'TOKEN_REFRESHED') {
+        setAuthError(null)
+      } else if (event === 'SIGNED_OUT' && !session) {
+        // User was signed out, clear any errors
         setAuthError(null)
       }
     })
@@ -58,10 +63,18 @@ export default function AuthUI({
       const errorDescription = params.get('error_description')
       
       if (error) {
+        console.error('Auth error from URL:', error, errorDescription)
         let errorMessage = errorDescription || error
+        
+        // Provide specific error messages
         if (errorMessage.toLowerCase().includes('captcha')) {
-          errorMessage = 'CAPTCHA verification failed. Your domain may need to be whitelisted in Cloudflare Turnstile settings.'
+          errorMessage = 'CAPTCHA verification failed. Check that your domain is whitelisted in Cloudflare Turnstile and Supabase redirect URLs are configured.'
+        } else if (errorMessage.toLowerCase().includes('redirect')) {
+          errorMessage = 'Redirect URL not authorized. Please add this URL to Supabase redirect URLs list.'
+        } else if (errorMessage.toLowerCase().includes('invalid')) {
+          errorMessage = 'Invalid credentials or configuration. Check Supabase settings.'
         }
+        
         setAuthError(errorMessage)
         
         // Clean up URL
