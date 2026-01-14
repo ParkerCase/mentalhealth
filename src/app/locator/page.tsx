@@ -49,6 +49,7 @@ export default function Locator() {
     if (!authLoading && !user) {
       console.log('User not authenticated, redirecting to login')
       router.push('/api/auth/login?redirectUrl=' + encodeURIComponent('/locator'))
+      return
     }
   }, [user, authLoading, router])
   
