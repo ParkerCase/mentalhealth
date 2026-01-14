@@ -139,12 +139,12 @@ export default function AdminGroupDetail() {
             </>
           )}
           
-          <button
-            onClick={() => router.push(`/admin/groups/edit/${params.id}`)}
+          <Link
+            href={`/admin/groups/${params.id}/edit`}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
           >
             <FaEdit className="mr-2" /> Edit Group
-          </button>
+          </Link>
         </div>
       </div>
       
