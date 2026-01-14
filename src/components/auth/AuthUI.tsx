@@ -43,9 +43,6 @@ export default function AuthUI({
         setAuthError(null)
       } else if (event === 'TOKEN_REFRESHED') {
         setAuthError(null)
-      } else if (event === 'SIGNED_OUT' && !session) {
-        // User was signed out, clear any errors
-        setAuthError(null)
       }
     })
 
