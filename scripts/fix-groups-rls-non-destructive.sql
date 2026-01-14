@@ -37,7 +37,7 @@ BEGIN
 END $$;
 
 -- Policy 3: Admins can view ALL groups (including unapproved)
--- Email is stored in auth.users, not profiles
+-- Use JWT to get email - can't query auth.users directly in RLS
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -50,7 +50,7 @@ BEGIN
       FOR SELECT
       TO authenticated
       USING (
-        (SELECT email FROM auth.users WHERE id = auth.uid()) IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
+        (auth.jwt() ->> 'email') IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
       );
   END IF;
 END $$;
@@ -68,10 +68,10 @@ BEGIN
       FOR ALL
       TO authenticated
       USING (
-        (SELECT email FROM auth.users WHERE id = auth.uid()) IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
+        (auth.jwt() ->> 'email') IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
       )
       WITH CHECK (
-        (SELECT email FROM auth.users WHERE id = auth.uid()) IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
+        (auth.jwt() ->> 'email') IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
       );
   END IF;
 END $$;
