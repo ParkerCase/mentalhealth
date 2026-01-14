@@ -32,10 +32,14 @@ export default function AuthUI({
     }
   }, [user, router, redirectTo])
 
-  // Listen for auth errors
+  // Listen for auth errors through auth state changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        setAuthError(null)
+      } else if (event === 'SIGNED_OUT') {
+        setAuthError(null)
+      } else if (event === 'TOKEN_REFRESHED') {
         setAuthError(null)
       }
     })
@@ -45,11 +49,39 @@ export default function AuthUI({
     }
   }, [])
 
+  // Also listen for errors from auth operations
+  useEffect(() => {
+    // Check for errors in URL params (Supabase sometimes passes errors via redirect)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const error = params.get('error')
+      const errorDescription = params.get('error_description')
+      
+      if (error) {
+        let errorMessage = errorDescription || error
+        if (errorMessage.toLowerCase().includes('captcha')) {
+          errorMessage = 'CAPTCHA verification failed. Your domain may need to be whitelisted in Cloudflare Turnstile settings.'
+        }
+        setAuthError(errorMessage)
+        
+        // Clean up URL
+        const newUrl = window.location.pathname
+        window.history.replaceState({}, '', newUrl)
+      }
+    }
+  }, [])
+
   return (
     <div className="w-full max-w-md">
       {authError && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-800">{authError}</p>
+          <p className="text-sm text-red-800 font-medium">Authentication Error</p>
+          <p className="text-sm text-red-700 mt-1">{authError}</p>
+          {authError.toLowerCase().includes('captcha') && (
+            <p className="text-xs text-red-600 mt-2">
+              💡 Make sure your domain is whitelisted in Cloudflare Turnstile settings. See TURNSTILE_DOMAIN_SETUP.md for details.
+            </p>
+          )}
         </div>
       )}
       <Auth
@@ -70,15 +102,6 @@ export default function AuthUI({
         view={view}
         showLinks={showLinks}
         socialLayout="horizontal"
-        onError={(error) => {
-          console.error('Auth error:', error)
-          // Handle CAPTCHA errors specifically
-          if (error?.message?.toLowerCase().includes('captcha')) {
-            setAuthError('CAPTCHA verification failed. Please ensure your domain is whitelisted in Cloudflare Turnstile settings.')
-          } else {
-            setAuthError(error?.message || 'Authentication failed. Please try again.')
-          }
-        }}
       />
     </div>
   )
