@@ -20,17 +20,23 @@ export default function AdminGroups() {
     const fetchGroups = async () => {
       setLoading(true)
       try {
+        // Fetch ALL groups (including unapproved) - admin should see everything
         const { data, error } = await supabase
           .from('groups')
           .select('*')
           .order('created_at', { ascending: false })
         
-        if (error) throw error
+        if (error) {
+          console.error('Error fetching groups:', error)
+          throw error
+        }
         
+        console.log('Fetched groups:', data?.length || 0, 'groups')
         setGroups(data || [])
         setFilteredGroups(data || [])
       } catch (error) {
         console.error('Error fetching groups:', error)
+        alert('Error loading groups. Please check the console and ensure RLS policies are set correctly.')
       } finally {
         setLoading(false)
       }
