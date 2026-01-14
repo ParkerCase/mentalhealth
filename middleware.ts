@@ -69,10 +69,10 @@ export async function middleware(req: NextRequest) {
     console.log('Is authenticated:', isAuthenticated)
     
     // Define protected routes that require authentication
-    // NOTE: /locator and /groups/register are handled client-side to avoid middleware issues
+    // NOTE: /locator, /groups/register, and /messages are handled client-side to avoid middleware issues
     const protectedPaths = [
       '/profile',
-      '/messages',
+      // '/messages', // Handled client-side
       '/dashboard',
       '/admin',
       // '/groups/register', // Handled client-side
