@@ -49,11 +49,12 @@ export default function Locator() {
   useEffect(() => {
     if (!authLoading && !user) {
       console.log('User not authenticated, redirecting to login')
-      router.push('/api/auth/login?redirectUrl=' + encodeURIComponent('/locator'))
+      // Use window.location for a hard redirect to avoid any routing issues
+      window.location.href = '/api/auth/login?redirectUrl=' + encodeURIComponent('/locator')
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading])
   
-  // Don't show anything if we're still loading auth or redirecting
+  // Don't show anything if we're still loading auth
   if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -63,6 +64,7 @@ export default function Locator() {
   }
   
   // If no user after loading, we're redirecting (handled by useEffect above)
+  // Show loading state while redirect happens
   if (!user) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -73,6 +75,8 @@ export default function Locator() {
       </div>
     )
   }
+  
+  // User is authenticated, continue with the page
   
   // Try to get user location for better initial experience
   useEffect(() => {
