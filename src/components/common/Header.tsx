@@ -9,7 +9,7 @@ import { FaEnvelope, FaBars, FaTimes, FaUser, FaHeart } from 'react-icons/fa'
 
 export default function Header() {
   const pathname = usePathname()
-  const { user, profile, initialize, loading } = useAuthStore()
+  const { user, profile, initialize, loading, signOut } = useAuthStore()
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -260,10 +260,11 @@ export default function Header() {
               <div className="p-6 border-t border-white/10">
                 {user ? (
                   <button 
-                    onClick={() => {
+                    onClick={async () => {
                       setMobileMenuOpen(false)
                       // Handle logout
-                      window.location.href = '/api/auth/logout'
+                      await signOut()
+                      window.location.href = '/'
                     }}
                     className="w-full flex items-center justify-center space-x-2 py-3 text-red-400 hover:text-red-300 transition-colors touch-manipulation"
                   >

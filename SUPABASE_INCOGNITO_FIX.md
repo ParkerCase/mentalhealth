@@ -15,13 +15,13 @@ Go to **Supabase Dashboard → Authentication → URL Configuration**:
 ### Required Settings:
 
 1. **Site URL:**
-   - Production: `https://sedivinemasculine.com`
+   - Production: `https://arisedivinemasculine.com`
    - Or your Vercel URL: `https://your-app.vercel.app`
 
 2. **Redirect URLs** (add ALL of these):
    ```
-   https://sedivinemasculine.com/**
-   https://sedivinemasculine.com/api/auth/callback
+   https://arisedivinemasculine.com/**
+   https://arisedivinemasculine.com/api/auth/callback
    https://*.vercel.app/api/auth/callback
    http://localhost:3000/api/auth/callback
    http://localhost:3000/**

@@ -24,7 +24,8 @@ function LoginPageInner() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push(redirectUrl)
+      // Use replace instead of push to avoid back button issues
+      router.replace(redirectUrl)
     }
   }, [user, loading, router, redirectUrl])
 
@@ -37,9 +38,13 @@ function LoginPageInner() {
   }
 
   if (user) {
+    // Show redirect message briefly, but useEffect should handle redirect
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p>You are already logged in. Redirecting...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>You are already logged in. Redirecting...</p>
+        </div>
       </div>
     )
   }

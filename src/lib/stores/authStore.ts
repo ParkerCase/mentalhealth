@@ -110,7 +110,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   
   signOut: async () => {
+    // Clear local state first
     set({ user: null, profile: null })
-    return supabase.auth.signOut()
+    // Sign out from Supabase (this clears Supabase session)
+    const result = await supabase.auth.signOut()
+    // Also clear our custom cookie if it exists
+    if (typeof document !== 'undefined') {
+      document.cookie = 'supabase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    }
+    return result
   }
 }))

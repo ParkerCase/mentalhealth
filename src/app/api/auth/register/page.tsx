@@ -19,7 +19,8 @@ function RegisterPageInner() {
     if (!loading && user) {
       // Check if there's a redirect URL in the query parameters
       const redirect = searchParams?.get('redirectUrl')
-      router.push(redirect || '/profile')
+      // Redirect immediately if user is already logged in
+      router.replace(redirect || '/profile')
     }
   }, [user, loading, router, searchParams])
 
@@ -32,9 +33,13 @@ function RegisterPageInner() {
   }
 
   if (user) {
+    // Show redirect message briefly, but useEffect should handle redirect
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p>You are already logged in. Redirecting...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>You are already logged in. Redirecting...</p>
+        </div>
       </div>
     )
   }

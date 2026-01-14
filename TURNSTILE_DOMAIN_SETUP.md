@@ -14,8 +14,8 @@ You're seeing "captcha verification process failed" errors on mobile and incogni
 In your Turnstile site settings, you need to add **ALL** domains where your app will be accessed:
 
 **Add these domains:**
-- `sedivinemasculine.com` (your production domain)
-- `*.sedivinemasculine.com` (wildcard for all subdomains)
+- `arisedivinemasculine.com` (your production domain)
+- `*.arisedivinemasculine.com` (wildcard for all subdomains)
 - `localhost` (for local development)
 - `127.0.0.1` (for local development)
 - `*.vercel.app` (if you're using Vercel preview deployments)
