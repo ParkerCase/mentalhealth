@@ -26,22 +26,47 @@ export async function middleware(req: NextRequest) {
     
     const res = NextResponse.next()
     
-    // Check if user is authenticated using Supabase server client
+    // Check if user is authenticated
+    // For middleware, we need to manually check cookies since Supabase stores sessions client-side
     let isAuthenticated = false
     let userEmail: string | null = null
     
-    try {
-      // Use Supabase server client which properly reads cookies
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      isAuthenticated = !!user
-      userEmail = user?.email || null
-      console.log('Authentication check result:', isAuthenticated)
-      console.log('User email:', userEmail)
-    } catch (e) {
-      console.error('Error checking auth in middleware:', e)
+    // Check for our custom auth cookie first
+    const supabaseAuthCookie = req.cookies.get('supabase-auth-token')?.value
+    
+    if (supabaseAuthCookie) {
+      try {
+        const [access_token, refresh_token] = JSON.parse(supabaseAuthCookie)
+        
+        if (access_token) {
+          // Create supabase client
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          )
+          
+          // Set the session manually
+          const { data, error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token
+          })
+          
+          if (data.session && !error) {
+            isAuthenticated = true
+            userEmail = data.session.user?.email || null
+            console.log('Authentication check result: TRUE')
+            console.log('User email:', userEmail)
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing auth cookie:', e)
+      }
     }
+    
+    // If no custom cookie, check if user might be authenticated via localStorage (client-side only)
+    // In this case, we can't check it in middleware, so we'll allow the request through
+    // and let the client-side handle the redirect if needed
+    console.log('Is authenticated:', isAuthenticated)
     
     // Define protected routes that require authentication
     const protectedPaths = [
