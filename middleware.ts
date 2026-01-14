@@ -26,35 +26,48 @@ export async function middleware(req: NextRequest) {
     
     const res = NextResponse.next()
     
-    // Get the auth cookie
-    const supabaseAuthCookie = req.cookies.get('supabase-auth-token')?.value
-    console.log('Auth cookie exists:', !!supabaseAuthCookie)
-    
     // Check if user is authenticated
+    // Supabase stores auth in multiple ways - check all possible cookies
     let isAuthenticated = false
     let userEmail: string | null = null
     
-    if (supabaseAuthCookie) {
+    // Check for our custom auth cookie
+    const supabaseAuthCookie = req.cookies.get('supabase-auth-token')?.value
+    // Also check for Supabase's default cookies
+    const sbAccessToken = req.cookies.get('sb-access-token')?.value
+    const sbRefreshToken = req.cookies.get('sb-refresh-token')?.value
+    
+    if (supabaseAuthCookie || sbAccessToken) {
       try {
-        // Parse the cookie
-        const [access_token, refresh_token] = JSON.parse(supabaseAuthCookie)
+        let access_token, refresh_token
         
-        // Create supabase client
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        if (supabaseAuthCookie) {
+          // Our custom cookie format
+          [access_token, refresh_token] = JSON.parse(supabaseAuthCookie)
+        } else if (sbAccessToken && sbRefreshToken) {
+          // Supabase default cookies
+          access_token = sbAccessToken
+          refresh_token = sbRefreshToken
+        }
         
-        // Set the session manually
-        const { data, error } = await supabase.auth.setSession({
-          access_token,
-          refresh_token
-        })
-        
-        isAuthenticated = !!data.session
-        userEmail = data.session?.user?.email || null
-        console.log('Authentication check result:', isAuthenticated)
-        console.log('User email:', userEmail)
+        if (access_token) {
+          // Create supabase client
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          )
+          
+          // Set the session manually
+          const { data, error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token
+          })
+          
+          isAuthenticated = !!data.session
+          userEmail = data.session?.user?.email || null
+          console.log('Authentication check result:', isAuthenticated)
+          console.log('User email:', userEmail)
+        }
       } catch (e) {
         console.error('Error parsing auth cookie:', e)
       }
@@ -86,7 +99,8 @@ export async function middleware(req: NextRequest) {
     console.log('Is authenticated:', isAuthenticated)
     
     // If this is a protected path and the user is not logged in, redirect to login
-    if (isProtectedPath && !isAuthenticated) {
+    // BUT: Don't redirect if we're already on the login/register page (prevents loops)
+    if (isProtectedPath && !isAuthenticated && !path.startsWith('/api/auth/')) {
       console.log('Redirecting unauthenticated user from:', path, 'to login page')
       // Create the redirect URL with the current path as the redirectUrl query parameter
       const redirectUrl = new URL('/api/auth/login', req.url)
