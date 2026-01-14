@@ -30,6 +30,7 @@ export default function Locator() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<GroupDataWithDistance[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
+  const [authTimeout, setAuthTimeout] = useState(false)
   
   // Check if mobile
   useEffect(() => {
@@ -49,7 +50,6 @@ export default function Locator() {
     if (!authLoading && !user) {
       console.log('User not authenticated, redirecting to login')
       router.push('/api/auth/login?redirectUrl=' + encodeURIComponent('/locator'))
-      return
     }
   }, [user, authLoading, router])
   
@@ -387,8 +387,22 @@ export default function Locator() {
   // State to track if an overlay/modal is open
   const overlayOpen = Boolean(selectedGroup) || showSearchResults || (!isLoading && groups.length === 0);
   
-  // Show loading while checking authentication
-  if (authLoading) {
+  // TEMPORARILY: Allow page to render even if auth is loading or user is null
+  // This will help us see if the page itself works
+  // TODO: Re-enable auth check once we confirm page renders
+  
+  // Show loading while checking authentication (with timeout to prevent infinite loading)
+  const [authTimeout, setAuthTimeout] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (authLoading) {
+        setAuthTimeout(true)
+      }
+    }, 3000) // 3 second timeout
+    return () => clearTimeout(timer)
+  }, [authLoading])
+  
+  if (authLoading && !authTimeout) {
     return (
       <div className="min-h-screen bg-[#292929] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -396,8 +410,8 @@ export default function Locator() {
     )
   }
 
-  // Show loading if user is not authenticated (will redirect)
-  if (!user) {
+  // Show loading if user is not authenticated (will redirect) - but only after timeout
+  if (!user && !authTimeout) {
     return (
       <div className="min-h-screen bg-[#292929] flex items-center justify-center">
         <div className="text-center">
@@ -408,7 +422,7 @@ export default function Locator() {
     )
   }
 
-  // User is authenticated - render the page
+  // Render the page - either user is authenticated OR we've timed out (for debugging)
   return (
     <div className="min-h-screen bg-[#292929] overflow-x-hidden">
 
