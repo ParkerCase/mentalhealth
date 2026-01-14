@@ -61,10 +61,19 @@ export default function Locator() {
     )
   }
   
-  // If no user after loading, we're redirecting (handled by useEffect above)
+  // If no user after loading, show loading while redirecting
   if (!user) {
-    return null
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>Redirecting to login...</p>
+        </div>
+      </div>
+    )
   }
+  
+  // User is authenticated, continue with the page
   
   // Try to get user location for better initial experience
   useEffect(() => {
