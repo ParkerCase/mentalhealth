@@ -387,42 +387,10 @@ export default function Locator() {
   // State to track if an overlay/modal is open
   const overlayOpen = Boolean(selectedGroup) || showSearchResults || (!isLoading && groups.length === 0);
   
-  // TEMPORARILY: Allow page to render even if auth is loading or user is null
-  // This will help us see if the page itself works
-  // TODO: Re-enable auth check once we confirm page renders
+  // TEMPORARILY DISABLED AUTH CHECK - PAGE WILL ALWAYS RENDER
+  // TODO: Re-enable auth check once we confirm page renders correctly
   
-  // Show loading while checking authentication (with timeout to prevent infinite loading)
-  const [authTimeout, setAuthTimeout] = useState(false)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (authLoading) {
-        setAuthTimeout(true)
-      }
-    }, 3000) // 3 second timeout
-    return () => clearTimeout(timer)
-  }, [authLoading])
-  
-  if (authLoading && !authTimeout) {
-    return (
-      <div className="min-h-screen bg-[#292929] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
-
-  // Show loading if user is not authenticated (will redirect) - but only after timeout
-  if (!user && !authTimeout) {
-    return (
-      <div className="min-h-screen bg-[#292929] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">Redirecting to login...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Render the page - either user is authenticated OR we've timed out (for debugging)
+  // Render the page - auth check disabled for now
   return (
     <div className="min-h-screen bg-[#292929] overflow-x-hidden">
 
