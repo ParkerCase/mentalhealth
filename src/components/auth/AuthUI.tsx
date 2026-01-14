@@ -51,6 +51,27 @@ export default function AuthUI({
     }
   }, [])
 
+  // Listen for sign-up events to provide better feedback
+  useEffect(() => {
+    if (view === 'sign_up') {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_UP') {
+          // Check if user needs email confirmation
+          if (session?.user && !session.user.email_confirmed_at) {
+            console.log('User signed up but email not confirmed. Email confirmation may be required.')
+            // Note: Supabase Auth UI should handle this message, but we log it for debugging
+          } else if (session?.user && session.user.email_confirmed_at) {
+            console.log('User signed up and email is already confirmed. No email sent.')
+          }
+        }
+      })
+
+      return () => {
+        subscription.unsubscribe()
+      }
+    }
+  }, [view])
+
   // Also listen for errors from auth operations
   useEffect(() => {
     // Check for errors in URL params (Supabase sometimes passes errors via redirect)
