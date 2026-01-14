@@ -69,13 +69,14 @@ export async function middleware(req: NextRequest) {
     console.log('Is authenticated:', isAuthenticated)
     
     // Define protected routes that require authentication
+    // NOTE: /locator and /groups/register are handled client-side to avoid middleware issues
     const protectedPaths = [
       '/profile',
       '/messages',
       '/dashboard',
       '/admin',
-      '/groups/register',
-      '/locator',
+      // '/groups/register', // Handled client-side
+      // '/locator', // Handled client-side
     ]
     
     // Get the pathname from the request
@@ -123,13 +124,14 @@ export async function middleware(req: NextRequest) {
 }
 
 // Only run middleware on specific paths
+// NOTE: /locator and /groups/register are NOT in matcher - handled client-side only
 export const config = {
   matcher: [
-    '/locator',
     '/profile',
     '/messages',
     '/dashboard',
     '/admin',
-    '/groups/register',
+    // '/locator', // Removed - handled client-side
+    // '/groups/register', // Removed - handled client-side
   ],
 }
