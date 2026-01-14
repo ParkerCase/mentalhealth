@@ -26,34 +26,23 @@ CREATE POLICY "Authenticated users can create groups" ON groups
 
 -- Policy 3: Admins can view ALL groups (including unapproved)
 -- This allows admins to see pending submissions
+-- Email is stored in auth.users, not profiles
 CREATE POLICY "Admins can view all groups" ON groups
   FOR SELECT
   TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.email IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
-    )
+    (SELECT email FROM auth.users WHERE id = auth.uid()) IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
   );
 
--- Policy 4: Admins can update all groups
+-- Policy 4: Admins can manage all groups
 CREATE POLICY "Admins can manage all groups" ON groups
   FOR ALL
   TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.email IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
-    )
+    (SELECT email FROM auth.users WHERE id = auth.uid()) IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
   )
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.email IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
-    )
+    (SELECT email FROM auth.users WHERE id = auth.uid()) IN ('jongfisher70@gmail.com', 'parkere.case@gmail.com')
   );
 
 -- Policy 5: Group leaders can update their own groups

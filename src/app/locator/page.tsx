@@ -335,20 +335,20 @@ export default function Locator() {
         if (groupsError) {
           console.error('Error fetching nearby groups:', groupsError);
           // Fallback to client-side filtering if RPC fails
-          const nearbyGroups = groups.filter(group => {
+        const nearbyGroups = groups.filter(group => {
             if (group.lat === 0 && group.lng === 0) return false; // Skip groups without coordinates
-            const distance = calculateDistance(searchLat, searchLng, group.lat, group.lng);
+          const distance = calculateDistance(searchLat, searchLng, group.lat, group.lng);
             return distance <= 50;
-          }).map(group => ({
-            ...group,
-            distance: calculateDistance(searchLat, searchLng, group.lat, group.lng)
-          })).sort((a, b) => a.distance - b.distance);
-          
-          setSearchResults(nearbyGroups);
-          setShowSearchResults(true);
-          
-          if (nearbyGroups.length === 0) {
-            setSearchError('No groups found within 50 miles of this location.');
+        }).map(group => ({
+          ...group,
+          distance: calculateDistance(searchLat, searchLng, group.lat, group.lng)
+        })).sort((a, b) => a.distance - b.distance);
+        
+        setSearchResults(nearbyGroups);
+        setShowSearchResults(true);
+        
+        if (nearbyGroups.length === 0) {
+          setSearchError('No groups found within 50 miles of this location.');
           }
         } else {
           // Format the RPC results
