@@ -386,10 +386,10 @@ export default function GroupForm({ onSuccess }: GroupFormProps) {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || success}
               className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+              {success ? 'Submitted' : isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
           </div>
         </div>

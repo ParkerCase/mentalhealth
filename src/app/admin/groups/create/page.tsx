@@ -271,10 +271,10 @@ export default function CreateGroup() {
             </Link>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!success}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {isSubmitting ? 'Creating...' : 'Create Group'}
+              {success ? 'Submitted' : isSubmitting ? 'Creating...' : 'Create Group'}
             </button>
           </div>
         </form>

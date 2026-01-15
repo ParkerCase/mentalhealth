@@ -201,10 +201,10 @@ export default function ContactPage() {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || success}
                   className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400"
                 >
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                  {success ? 'Submitted' : isSubmitting ? 'Sending...' : 'Send Message'}
                 </button>
               </div>
             </form>

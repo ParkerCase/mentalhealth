@@ -340,10 +340,10 @@ export default function EditGroup() {
             </Link>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!success}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {isSubmitting ? 'Updating...' : 'Update Group'}
+              {success ? 'Submitted' : isSubmitting ? 'Updating...' : 'Update Group'}
             </button>
           </div>
         </form>

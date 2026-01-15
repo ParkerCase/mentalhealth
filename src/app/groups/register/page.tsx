@@ -508,10 +508,10 @@ export default function RegisterGroup() {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !!success}
             className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Group for Approval'}
+            {success ? 'Submitted' : isSubmitting ? 'Submitting...' : 'Submit Group for Approval'}
           </button>
         </div>
       </form>
